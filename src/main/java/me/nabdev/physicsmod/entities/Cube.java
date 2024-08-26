@@ -31,7 +31,7 @@ import java.util.HashMap;
 public class Cube extends Entity {
 
     static Identifier id = new Identifier(Constants.MOD_ID, "cube");
-    private static DiscreteDynamicsWorld dynamicsWorld;
+    public static DiscreteDynamicsWorld dynamicsWorld;
     private final RigidBody body;
 
     private Quaternion rotation = new Quaternion();
@@ -40,8 +40,8 @@ public class Cube extends Entity {
 
     private boolean isOriginal = false;
 
-    private static final HashMap<Integer, String> blocks = new HashMap<>();
-    private static final HashMap<Integer, RigidBody> blockBodies = new HashMap<>();
+    public static final HashMap<Integer, String> blocks = new HashMap<>();
+    public static final HashMap<Integer, RigidBody> blockBodies = new HashMap<>();
 
     public Cube() {
         super(id.toString());
