@@ -19,5 +19,8 @@
     "cosmic-reach": ">=0.1.50",
     "puzzle-loader": ">=1.4.3"
   },
-  "accessManipulator": "physics_mod.manipulator"
+  "accessManipulator": "physics_mod.manipulator",
+  "meta": {
+    "icon": "assets/${mod_id}/icons/icon.png"
+  }
 }
