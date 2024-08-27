@@ -14,7 +14,7 @@ repositories {
 
 dependencies {
     // ode4j
-    implementation(group: 'cz.advel.jbullet', name: 'jbullet', version: '20101010-1')
+    bundle(group: 'cz.advel.jbullet', name: 'jbullet', version: '20101010-1')
 }
 
 processResources {
