@@ -8,11 +8,12 @@ import com.github.puzzle.core.Identifier;
 import finalforeach.cosmicreach.GameSingletons;
 import finalforeach.cosmicreach.Threads;
 import finalforeach.cosmicreach.TickRunner;
+import finalforeach.cosmicreach.blocks.BlockState;
 import finalforeach.cosmicreach.entities.Entity;
 import finalforeach.cosmicreach.entities.player.Player;
 import finalforeach.cosmicreach.gamestates.GameState;
 import finalforeach.cosmicreach.gamestates.InGame;
-import finalforeach.cosmicreach.ui.UI;
+import finalforeach.cosmicreach.items.ItemStack;
 import finalforeach.cosmicreach.world.Zone;
 import me.nabdev.physicsmod.Constants;
 import com.bulletphysics.collision.broadphase.AxisSweep3;
@@ -32,7 +33,10 @@ import me.nabdev.physicsmod.items.Launcher;
 
 import javax.vecmath.Quat4f;
 import javax.vecmath.Vector3f;
+import java.util.ArrayList;
 import java.util.HashMap;
+
+import static me.nabdev.physicsmod.items.Launcher.isMagneting;
 
 public class Cube extends Entity {
 
@@ -40,9 +44,9 @@ public class Cube extends Entity {
     public static DiscreteDynamicsWorld dynamicsWorld;
     private final RigidBody body;
 
-    private Quaternion rotation = new Quaternion();
+    public Quaternion rotation = new Quaternion();
 
-    private static Vector3 origin = null;
+    public static Vector3 origin = null;
 
     private boolean isOriginal = false;
 
@@ -51,6 +55,10 @@ public class Cube extends Entity {
 
     public static Cube magnetCube = null;
     public boolean isMagnet = false;
+
+    public static ArrayList<Cube> cubes = new ArrayList<>();
+
+    public static RigidBody playerBody;
 
     public Cube() {
         super(id.toString());
@@ -70,7 +78,8 @@ public class Cube extends Entity {
         CollisionShape boxShape = new BoxShape(new Vector3f(0.5f, 0.5f, 0.5f));
         Transform startTransform = new Transform();
         startTransform.setIdentity();
-        Vector3 offsetPos = new Vector3(InGame.getLocalPlayer().getPosition()).sub(origin).add(0, 1, 0);
+        PerspectiveCamera cam = ((ICameraOwner) GameState.IN_GAME).browserMod$getCamera();
+        Vector3 offsetPos = new Vector3(InGame.getLocalPlayer().getPosition()).sub(origin).add(0, 1.5f, 0).add(cam.direction.cpy().scl(2f));
         startTransform.origin.set(new Vector3f(offsetPos.x, offsetPos.y, offsetPos.z)); // Start at (0, 0, 0)
         float mass = 5.0f;
         Vector3f localInertia = new Vector3f(0, 0, 0);
@@ -79,8 +88,9 @@ public class Cube extends Entity {
         body = new RigidBody(rbInfo);
         body.setWorldTransform(startTransform);
         // Add friction to the body
-        body.setFriction(0.5f);
+        body.setFriction(1f);
         dynamicsWorld.addRigidBody(body);
+        cubes.add(this);
     }
 
     private static void initializeWorld() {
@@ -92,6 +102,22 @@ public class Cube extends Entity {
         SequentialImpulseConstraintSolver solver = new SequentialImpulseConstraintSolver();
         dynamicsWorld = new DiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfiguration);
         dynamicsWorld.setGravity(new Vector3f(0, -9.81f, 0));
+
+        // Create a 2 block tall, 0.5 block wide, 0.5 block deep box for the player
+        CollisionShape boxShape = new BoxShape(new Vector3f(0.3f, 1f, 0.3f));
+        Transform startTransform = new Transform();
+        startTransform.setIdentity();
+        startTransform.origin.set(new Vector3f(0, 0f, 0)); // Start at (0, 0, 0)
+        float mass = 50.0f;
+        Vector3f localInertia = new Vector3f(0, 0, 0);
+        boxShape.calculateLocalInertia(mass, localInertia);
+        RigidBodyConstructionInfo rbInfo = new RigidBodyConstructionInfo(mass, null, boxShape, localInertia);
+        playerBody = new RigidBody(rbInfo);
+        playerBody.setWorldTransform(startTransform);
+        playerBody.setGravity(new Vector3f(0, 0f, 0));
+
+        // disable physics, because we will be setting the position manually
+        dynamicsWorld.addRigidBody(playerBody);
     }
 
     private void processBlocks(Zone zone) {
@@ -112,11 +138,12 @@ public class Cube extends Entity {
                     int globalY = (int) checkPos.y;
                     int globalZ = (int) checkPos.z;
                     if (zone.getBlockState(checkPos) == null) continue;
-                    String id = zone.getBlockState(checkPos).getBlockId();
+                    BlockState state = zone.getBlockState(checkPos);
+                    String id = state.getBlockId();
                     int hashCode = globalX * 31 * 31 + globalY * 31 + globalZ;
                     String blockId = blocks.get(hashCode);
                     if (blockId != null && blockId.equals(id)) continue;
-                    if (id.contains("base:air")) {
+                    if (!isSolid(state)) {
                         if (blockId != null) {
                             dynamicsWorld.removeRigidBody(blockBodies.get(hashCode));
                             blocks.remove(hashCode);
@@ -158,15 +185,10 @@ public class Cube extends Entity {
             Vector3f myPos = new Vector3f(position.x, position.y, position.z);
             Vector3f dir = new Vector3f(playerPosF);
             dir.sub(myPos);
-            if (dir.length() < 1f) {
-                dir.normalize();
-                dir.scale(1f);
-            } else {
-                dir.normalize();
-                dir.scale(5);
-            }
+            dir.scale(3);
 
             body.setLinearVelocity(dir);
+            body.activate(true);
         }
 
         if (isOriginal) {
@@ -203,8 +225,9 @@ public class Cube extends Entity {
     }
 
     @Override
-    public void hit(float amount) {
-        if (UI.hotbar.getSelectedSlot().itemStack.getItem().getID().equals(Launcher.id.toString())) {
+    public void onUseInteraction(Zone zone, Player player, ItemStack heldItemStack) {
+        if(heldItemStack == null) return;
+        if (heldItemStack.getItem().getID().equals(Launcher.id.toString())) {
             if (isMagnet) return;
             if (magnetCube != null) {
                 magnetCube.isMagnet = false;
@@ -222,5 +245,27 @@ public class Cube extends Entity {
         dynamicsWorld = null;
         blockBodies.clear();
         blocks.clear();
+        cubes.clear();
+        playerBody = null;
+        if(magnetCube != null) {
+            magnetCube.isMagnet = false;
+            magnetCube = null;
+        }
+    }
+
+    public static boolean isSolid(BlockState b){
+        return b != null && !b.walkThrough;
+    }
+
+    @Override
+    public void hit(float amount){
+        PerspectiveCamera cam = ((ICameraOwner) GameState.IN_GAME).browserMod$getCamera();
+        this
+                .setVelocity(cam.direction.cpy().scl(20));
+        if(isMagneting){
+            isMagneting = false;
+            Cube.magnetCube.isMagnet = false;
+            Cube.magnetCube = null;
+        }
     }
 }

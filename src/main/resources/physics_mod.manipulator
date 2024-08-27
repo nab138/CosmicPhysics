@@ -1,5 +1,7 @@
 public field finalforeach/cosmicreach/entities/Entity sightRange
 
+public field finalforeach/cosmicreach/ui/debug/DebugInfo items
+
 public method finalforeach/cosmicreach/rendering/BatchCoords blockX ()I
 public method finalforeach/cosmicreach/rendering/BatchCoords blockY ()I
 public method finalforeach/cosmicreach/rendering/BatchCoords blockZ ()I
@@ -30,5 +32,13 @@ public field finalforeach/cosmicreach/io/CRBinDeserializer strings
 public method finalforeach/cosmicreach/io/CRBinDeserializer readDataFromSchema (Lfinalforeach/cosmicreach/savelib/crbin/CRBinSchema;Ljava/nio/ByteBuffer;)V
 public field finalforeach/cosmicreach/io/CRBinDeserializer classDeserializers
 public field finalforeach/cosmicreach/io/CRBinDeserializer defaultClassDeserializers
+public field finalforeach/cosmicreach/gamestates/GameState previousState
+public field finalforeach/cosmicreach/gamestates/PauseMenu cursorCaught
 
-public class finalforeach/cosmicreach/rendering/entities/Bone
+public field finalforeach/cosmicreach/entities/Entity tmpEntityBoundingBox
+public field finalforeach/cosmicreach/entities/Entity tmpEntityBoundingBox2
+public field finalforeach/cosmicreach/entities/Entity tmpBlockBoundingBoxes
+public field finalforeach/cosmicreach/entities/Entity tmpBlockBoundingBox
+public field finalforeach/cosmicreach/entities/Entity tmpBlockBoundingBox2
+public field finalforeach/cosmicreach/entities/Entity footstepTimer
+public method finalforeach/cosmicreach/entities/Entity shouldConstrainBySneak (Lfinalforeach/cosmicreach/world/Zone;Lcom/badlogic/gdx/math/collision/BoundingBox;Lcom/badlogic/gdx/math/collision/BoundingBox;IIIII)Z

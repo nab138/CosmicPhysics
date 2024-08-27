@@ -19,7 +19,6 @@ public class InGameMixin implements ICameraOwner {
         Cube.reset();
     }
 
-
     @Override
     public PerspectiveCamera browserMod$getCamera() {
         return rawWorldCamera;

@@ -16,7 +16,7 @@
     "physics.mixins.json"
   ],
   "dependencies": {
-    "cosmic-reach": ">=0.1.48",
+    "cosmic-reach": ">=0.1.50",
     "puzzle-loader": ">=1.4.3"
   },
   "accessManipulator": "physics_mod.manipulator"
