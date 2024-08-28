@@ -173,6 +173,7 @@ public class PhysicsWorld {
     public static void reset() {
         dynamicsWorld = null;
         blockBodies.clear();
+        allObjects.clear();
         blocks.clear();
         cubes.clear();
         playerBody = null;
