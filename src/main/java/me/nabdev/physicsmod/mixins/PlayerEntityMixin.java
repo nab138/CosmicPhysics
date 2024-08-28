@@ -11,22 +11,24 @@ import finalforeach.cosmicreach.entities.player.PlayerEntity;
 import finalforeach.cosmicreach.util.Axis;
 import finalforeach.cosmicreach.world.Zone;
 import me.nabdev.physicsmod.entities.Cube;
+import me.nabdev.physicsmod.utils.PhysicsWorld;
 import org.spongepowered.asm.mixin.Mixin;
 
 @Mixin(PlayerEntity.class)
 public class PlayerEntityMixin extends Entity {
     @Override
     public void update(Zone zone, double delta) {
+        PhysicsWorld.tick(delta);
         super.update(zone, delta);
-        if (Cube.playerBody != null) {
+        if (PhysicsWorld.playerBody != null) {
             Transform worldTransform = new Transform();
             worldTransform.setIdentity();
-            Vector3 pos = this.position.cpy().sub(Cube.origin);
+            Vector3 pos = this.position.cpy().sub(PhysicsWorld.getOrigin());
             worldTransform.origin.set(pos.x, pos.y + 2.1f, pos.z);
 
-            Cube.playerBody.setWorldTransform(worldTransform);
-            if(Cube.playerBody.getMotionState() != null) {
-                Cube.playerBody.getMotionState().setWorldTransform(worldTransform);
+            PhysicsWorld.playerBody.setWorldTransform(worldTransform);
+            if(PhysicsWorld.playerBody.getMotionState() != null) {
+                PhysicsWorld.playerBody.getMotionState().setWorldTransform(worldTransform);
             }
         }
     }
@@ -102,7 +104,7 @@ public class PlayerEntityMixin extends Entity {
         this.tmpEntityBoundingBox.update();
         this.collidedX = false;
         this.collidedZ = false;
-        for (Cube cube : Cube.cubes) {
+        for (Cube cube : PhysicsWorld.cubes) {
             if (cube == null) continue;
             cube.getBoundingBox(this.tmpBlockBoundingBox);
             // Expand the bounding box by 0.1f on all sides
@@ -343,7 +345,7 @@ public class PlayerEntityMixin extends Entity {
                 }
             }
         }
-        for (Cube cube : Cube.cubes) {
+        for (Cube cube : PhysicsWorld.cubes) {
             if (cube == null) continue;
             cube.getBoundingBox(this.tmpBlockBoundingBox);
             // Expand the bounding box by 0.1f on all sides

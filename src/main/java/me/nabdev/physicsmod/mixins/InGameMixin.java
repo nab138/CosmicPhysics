@@ -2,8 +2,8 @@ package me.nabdev.physicsmod.mixins;
 
 import com.badlogic.gdx.graphics.PerspectiveCamera;
 import finalforeach.cosmicreach.gamestates.InGame;
-import me.nabdev.physicsmod.ICameraOwner;
-import me.nabdev.physicsmod.entities.Cube;
+import me.nabdev.physicsmod.utils.ICameraOwner;
+import me.nabdev.physicsmod.utils.PhysicsWorld;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -16,7 +16,7 @@ public class InGameMixin implements ICameraOwner {
 
     @Inject(method = "unloadWorld", at = @At("HEAD"))
     private void unload(CallbackInfo ci) {
-        Cube.reset();
+        PhysicsWorld.reset();
     }
 
     @Override

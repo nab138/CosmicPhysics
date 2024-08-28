@@ -10,6 +10,7 @@ import finalforeach.cosmicreach.entities.EntityCreator;
 import finalforeach.cosmicreach.gamestates.InGame;
 import finalforeach.cosmicreach.world.Zone;
 import me.nabdev.physicsmod.entities.Cube;
+import me.nabdev.physicsmod.utils.PhysicsWorld;
 
 import static finalforeach.cosmicreach.gamestates.InGame.world;
 
@@ -21,7 +22,7 @@ public class Commands {
                 .executes(context -> {
                     String action = StringArgumentType.getString(context, "action");
                     if (action.equals("reset")) {
-                        Cube.reset();
+                        PhysicsWorld.reset();
                         return 0;
                     } else if (action.equals("cube")) {
                         Entity e = EntityCreator.get(Cube.id.toString());

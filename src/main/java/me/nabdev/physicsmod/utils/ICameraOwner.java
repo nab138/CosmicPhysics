@@ -1,4 +1,4 @@
-package me.nabdev.physicsmod;
+package me.nabdev.physicsmod.utils;
 
 import com.badlogic.gdx.graphics.PerspectiveCamera;
 
