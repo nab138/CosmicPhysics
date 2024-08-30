@@ -1,12 +1,11 @@
 package me.nabdev.physicsmod.utils;
 
-import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.BoundingBox;
-import com.bulletphysics.dynamics.RigidBody;
+import com.jme3.bullet.objects.PhysicsRigidBody;
 
 public interface IPhysicsEntity {
-    Vector3 getPosition();
-    RigidBody getBody();
+    PhysicsRigidBody getBody();
     BoundingBox getBoundingBox();
     void setMagneted(boolean magneted);
+    void forceActivate();
 }

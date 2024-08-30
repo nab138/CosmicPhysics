@@ -35,7 +35,7 @@ public class Launcher implements IModItem {
             return;
         }
         Cube e = (Cube)EntityCreator.get(Cube.id.toString());
-        e.setPosition(new Vector3(player.getPosition()).add(0, 1.5f,0).add(cam.direction.cpy().scl(2f)));
+        e.setPosition(new Vector3(player.getPosition()).add(0, 1.5f,0).add(cam.direction.cpy().scl(2.5f)));
         player.getZone(world).addEntity(e);
         e.setVelocity(cam.direction.cpy().scl(6));
     }

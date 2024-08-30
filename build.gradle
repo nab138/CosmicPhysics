@@ -13,8 +13,7 @@ repositories {
 }
 
 dependencies {
-    // ode4j
-    bundle(group: 'cz.advel.jbullet', name: 'jbullet', version: '20101010-1')
+    bundle("com.github.stephengold:Libbulletjme:21.2.1")
 }
 
 processResources {

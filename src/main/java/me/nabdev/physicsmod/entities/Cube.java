@@ -6,6 +6,9 @@ import com.badlogic.gdx.math.Quaternion;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.BoundingBox;
 import com.github.puzzle.core.Identifier;
+import com.jme3.bullet.collision.shapes.BoxCollisionShape;
+import com.jme3.bullet.objects.PhysicsRigidBody;
+import com.jme3.math.Vector3f;
 import finalforeach.cosmicreach.GameSingletons;
 import finalforeach.cosmicreach.Threads;
 import finalforeach.cosmicreach.TickRunner;
@@ -16,28 +19,21 @@ import finalforeach.cosmicreach.gamestates.InGame;
 import finalforeach.cosmicreach.items.ItemStack;
 import finalforeach.cosmicreach.world.Zone;
 import me.nabdev.physicsmod.Constants;
-import com.bulletphysics.collision.shapes.BoxShape;
-import com.bulletphysics.collision.shapes.CollisionShape;
-import com.bulletphysics.dynamics.RigidBody;
-import com.bulletphysics.dynamics.RigidBodyConstructionInfo;
-import com.bulletphysics.linearmath.Transform;
+import me.nabdev.physicsmod.items.Linker;
 import me.nabdev.physicsmod.utils.ICameraOwner;
 import me.nabdev.physicsmod.items.Launcher;
 import me.nabdev.physicsmod.utils.IPhysicsEntity;
 import me.nabdev.physicsmod.utils.PhysicsWorld;
 
-import javax.vecmath.Quat4f;
-import javax.vecmath.Vector3f;
-
-import static me.nabdev.physicsmod.utils.PhysicsWorld.processBlocks;
-
 public class Cube extends Entity implements IPhysicsEntity {
 
     public static Identifier id = new Identifier(Constants.MOD_ID, "cube");
 
-    private final RigidBody body;
+    private final PhysicsRigidBody body;
     public Quaternion rotation = new Quaternion();
     public boolean isMagnet = false;
+
+    public float mass = 2.5f;
 
 
     public Cube() {
@@ -51,18 +47,11 @@ public class Cube extends Entity implements IPhysicsEntity {
         PhysicsWorld.initialize();
 
 
-        CollisionShape boxShape = new BoxShape(new Vector3f(0.5f, 0.5f, 0.5f));
-        Transform startTransform = new Transform();
-        startTransform.setIdentity();
+        BoxCollisionShape boxShape = new BoxCollisionShape(new Vector3f(0.5f, 0.5f, 0.5f));
         PerspectiveCamera cam = ((ICameraOwner) GameState.IN_GAME).browserMod$getCamera();
         Vector3 offsetPos = PhysicsWorld.getPlayerPos().add(0, 1.5f, 0).add(cam.direction.cpy().scl(2f));
-        startTransform.origin.set(new Vector3f(offsetPos.x, offsetPos.y, offsetPos.z));
-        float mass = 5.0f;
-        Vector3f localInertia = new Vector3f(0, 0, 0);
-        boxShape.calculateLocalInertia(mass, localInertia);
-        RigidBodyConstructionInfo rbInfo = new RigidBodyConstructionInfo(mass, null, boxShape, localInertia);
-        body = new RigidBody(rbInfo);
-        body.setWorldTransform(startTransform);
+        body = new PhysicsRigidBody(boxShape, mass);
+        body.setPhysicsLocation(new Vector3f(offsetPos.x, offsetPos.y, offsetPos.z));
         body.setFriction(1f);
 
         PhysicsWorld.addCube(this);
@@ -76,7 +65,7 @@ public class Cube extends Entity implements IPhysicsEntity {
             this.onDeath(zone);
             return;
         }
-        processBlocks(zone, this);
+        PhysicsWorld.alertChunk(zone, zone.getChunkAtPosition(this.position));
 
         if (isMagnet) {
             Player player = InGame.getLocalPlayer();
@@ -87,21 +76,18 @@ public class Cube extends Entity implements IPhysicsEntity {
 
             Vector3f myPos = new Vector3f(position.x, position.y, position.z);
             Vector3f dir = new Vector3f(playerPosF);
-            dir.sub(myPos);
-            dir.scale(3);
+            dir = dir.subtract(myPos).mult(3);
 
             body.setLinearVelocity(dir);
+            body.activate(true);
         }
 
         // Update the position and rotation from the physics simulation
-        Transform trans = new Transform();
-        body.getWorldTransform(trans);
-        Vector3f pos = trans.origin;
-        Quat4f rot = new Quat4f();
-        trans.getRotation(rot);
-        rotation = new Quaternion(rot.x, rot.y, rot.z, rot.w);
+        Vector3f pos = body.getPhysicsLocation(null);
+        com.jme3.math.Quaternion rot = body.getPhysicsRotation(null);
+        rotation = new Quaternion(rot.getX(), rot.getY(), rot.getZ(), rot.getW());
 
-        position.set(pos.x, pos.y, pos.z).add(PhysicsWorld.getOrigin());
+        position.set(pos.x, pos.y, pos.z);
 
 
         this.getBoundingBox(this.globalBoundingBox);
@@ -128,6 +114,13 @@ public class Cube extends Entity implements IPhysicsEntity {
         if (heldItemStack.getItem().getID().equals(Launcher.id.toString())) {
             if (isMagnet) return;
             PhysicsWorld.magnet(this);
+        } else if(heldItemStack.getItem().getID().equals(Linker.id.toString())) {
+            if(Linker.entityOne == null) {
+                Linker.entityOne = this;
+            } else if(Linker.entityTwo == null) {
+                Linker.entityTwo = this;
+                Linker.link();
+            }
         }
     }
 
@@ -140,12 +133,14 @@ public class Cube extends Entity implements IPhysicsEntity {
         if(isMagnet){
             PhysicsWorld.dropMagnet();
         }
+
+        body.activate(true);
         PerspectiveCamera cam = ((ICameraOwner) GameState.IN_GAME).browserMod$getCamera();
         this.setVelocity(cam.direction.cpy().scl(20));
     }
 
     @Override
-    public RigidBody getBody() {
+    public PhysicsRigidBody getBody() {
         return body;
     }
 
@@ -162,8 +157,8 @@ public class Cube extends Entity implements IPhysicsEntity {
     }
 
     @Override
-    public Vector3 getPosition() {
-        return position;
+    public void forceActivate() {
+        if(body != null) body.activate(true);
     }
 
     @Override
