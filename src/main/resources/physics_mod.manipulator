@@ -42,4 +42,5 @@ public field finalforeach/cosmicreach/entities/Entity tmpBlockBoundingBox
 public field finalforeach/cosmicreach/entities/Entity tmpBlockBoundingBox2
 public field finalforeach/cosmicreach/entities/Entity footstepTimer
 public field finalforeach/cosmicreach/rendering/meshes/IntIndexedMesh indexData
+public field finalforeach/cosmicreach/rendering/entities/EntityModel diffuseTexture
 public method finalforeach/cosmicreach/entities/Entity shouldConstrainBySneak (Lfinalforeach/cosmicreach/world/Zone;Lcom/badlogic/gdx/math/collision/BoundingBox;Lcom/badlogic/gdx/math/collision/BoundingBox;IIIII)Z

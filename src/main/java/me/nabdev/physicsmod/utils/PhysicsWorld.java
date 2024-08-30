@@ -1,15 +1,23 @@
 package me.nabdev.physicsmod.utils;
 
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Pixmap;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.TextureData;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.OrderedMap;
+import com.github.puzzle.game.engine.blocks.models.PuzzleBlockModel;
 import com.jme3.bullet.PhysicsSpace;
 import com.jme3.bullet.collision.shapes.BoxCollisionShape;
 import com.jme3.bullet.collision.shapes.CompoundCollisionShape;
 import com.jme3.bullet.objects.PhysicsRigidBody;
 import com.jme3.math.Vector3f;
+import finalforeach.cosmicreach.GameAssetLoader;
 import finalforeach.cosmicreach.blocks.Block;
 import finalforeach.cosmicreach.blocks.BlockState;
 import finalforeach.cosmicreach.gamestates.InGame;
+import finalforeach.cosmicreach.rendering.blockmodels.BlockModelJsonTexture;
 import finalforeach.cosmicreach.savelib.blockdata.IBlockData;
 import finalforeach.cosmicreach.world.Chunk;
 import finalforeach.cosmicreach.world.Zone;
@@ -33,16 +41,23 @@ public class PhysicsWorld {
     public static final HashMap<Integer, String> blocks = new HashMap<>();
     public static final HashMap<Integer, PhysicsRigidBody> blockBodies = new HashMap<>();
     private static final HashMap<Chunk, ChunkBodyData> chunkBodies = new HashMap<>();
+    private static final HashMap<BlockState, Texture> blockTextures = new HashMap<>();
+    private static final ArrayList<PhysicsRigidBody> queuedBodies = new ArrayList<>();
     public static IPhysicsEntity magnetEntity = null;
     // public static PhysicsRigidBody playerBody;
 
     public static boolean isMagneting = false;
     public static boolean isRunning = false;
 
-
+    public static boolean readyToInitialize = false;
 
     public static void initialize(){
+        readyToInitialize = true;
+    }
+
+    private static void runInit(){
         if(space != null || isRunning) return;
+        readyToInitialize = false;
         isRunning = true;
         initializeWorld();
     }
@@ -50,16 +65,6 @@ public class PhysicsWorld {
     private static void initializeWorld() {
         space = new PhysicsSpace(PhysicsSpace.BroadphaseType.DBVT);
         space.setGravity(new Vector3f(0, -9.81f, 0));
-
-        // Create a 2 block tall, 0.5 block wide, 0.5 block deep box for the player
-//        BoxCollisionShape boxShape = new BoxCollisionShape(new Vector3f(0.255f, 1f, 0.255f));
-//        Transform startTransform = new Transform();
-//        startTransform.loadIdentity();
-//        float mass = 50.0f;
-        //playerBody = new PhysicsRigidBody(boxShape, mass);
-        //playerBody.setGravity(new Vector3f(0, 0f, 0));
-
-        //addRigidBody(playerBody);
     }
 
     public static Vector3 getPlayerPos(){
@@ -67,11 +72,16 @@ public class PhysicsWorld {
     }
 
     private static void addRigidBody(PhysicsRigidBody body){
+        if(space == null){
+            queuedBodies.add(body);
+            return;
+        }
         space.addCollisionObject(body);
     }
 
     private static void addEntity(IPhysicsEntity entity){
         allObjects.add(entity);
+
         addRigidBody(entity.getBody());
     }
 
@@ -86,8 +96,8 @@ public class PhysicsWorld {
         addEntity(cube);
     }
 
-    public static boolean isSolid(BlockState b){
-        return b != null && !b.walkThrough;
+    public static boolean isEmpty(BlockState b){
+        return b == null || b.walkThrough;
     }
 
     public static void dropMagnet() {
@@ -110,8 +120,11 @@ public class PhysicsWorld {
         allObjects.clear();
         blocks.clear();
         cubes.clear();
-        //playerBody = null;
+        chunkBodies.clear();
+        blockTextures.clear();
+        queuedBodies.clear();
         isRunning = false;
+
         if(magnetEntity != null) {
             magnetEntity.setMagneted(false);
             magnetEntity = null;
@@ -119,7 +132,14 @@ public class PhysicsWorld {
     }
 
     public static void tick(double delta){
+        if(!isRunning && readyToInitialize) runInit();
         if(!isRunning || space == null) return;
+        if(!queuedBodies.isEmpty()){
+            for(PhysicsRigidBody body : queuedBodies){
+                space.addCollisionObject(body);
+            }
+            queuedBodies.clear();
+        }
         space.update((float) delta);
     }
 
@@ -147,7 +167,7 @@ public class PhysicsWorld {
             for(int y = 0; y < 16; y++){
                 for(int z = 0; z < 16; z++){
                     BlockState state = blockData.getBlockValue(x, y, z);
-                    if(!isSolid(state)) continue;
+                    if(isEmpty(state)) continue;
                     Vector3 pos = new Vector3(x, y, z);
                     BoxCollisionShape boxShape = new BoxCollisionShape(new Vector3f(0.5f, 0.5f, 0.5f));
                     chunkShape.addChildShape(boxShape, new Vector3f(pos.x + 0.5f, pos.y + 0.5f, pos.z + 0.5f));
@@ -165,6 +185,9 @@ public class PhysicsWorld {
         } else {
             chunkData.body.setCollisionShape(chunkShape);
         }
+        for(Cube cube : cubes){
+            cube.setMass(2.5f);
+        }
     }
 
     public static void invalidateChunk(Chunk chunk){
@@ -173,5 +196,81 @@ public class PhysicsWorld {
         for(IPhysicsEntity entity : allObjects){
             entity.forceActivate();
         }
+    }
+
+    public static void createBlockAt(Vector3 pos, BlockState state, Zone zone){
+        initialize();
+        if(isEmpty(state)) return;
+        if(state.getModel() instanceof PuzzleBlockModel blockModelJson){
+            OrderedMap<String, BlockModelJsonTexture> textures = blockModelJson.getTextures();
+            Texture stitchedTexture;
+            if(blockTextures.containsKey(state)){
+                stitchedTexture = blockTextures.get(state);
+            } else {
+                stitchedTexture = createStitchedTexture(textures);
+                blockTextures.put(state, stitchedTexture);
+            }
+            Cube e = new Cube(new Vector3f(pos.x, pos.y, pos.z), state);
+            zone.addEntity(e);
+            e.setTexture(stitchedTexture);
+            e.setMass(0);
+        } else {
+            System.out.println("Block model is not PuzzleBlockModel, it is: " + state.getModel().getClass());
+        }
+    }
+
+    public static Texture createStitchedTexture(OrderedMap<String, BlockModelJsonTexture> textures) {
+        final Pixmap pixmap = new Pixmap(64, 32, Pixmap.Format.RGBA8888);
+
+        // Define positions for each texture
+        int[][] positions = {
+                {0, 0}, {16, 0}, {32, 0}, {48, 0},
+                {0, 16}, {16, 16}, {32, 16}, {48, 16}
+        };
+
+        // Define the order of textures
+        String[] order = {"BLANK", "top", "bottom", "BLANK", "side", "side", "side", "side"};
+
+        final Texture[] stitchedTexture = new Texture[1];
+        Gdx.app.postRunnable(() -> {
+                // Iterate through the order and draw each texture
+                if(textures.orderedKeys().first().equals("all")) {
+                    // Draw the texture 8 times to fill the entire pixmap
+                    String key = textures.orderedKeys().first();
+                    BlockModelJsonTexture tex = textures.get(key);
+                    Texture blockTex = new Texture(GameAssetLoader.loadAsset("textures/blocks/" + tex.fileName));
+                    TextureData data = blockTex.getTextureData();
+                    data.prepare();
+                    Pixmap blockPixmap = data.consumePixmap();
+                    for (int i = 0; i < 8; i++) {
+                        pixmap.drawPixmap(blockPixmap, positions[i][0], positions[i][1]);
+                    }
+                    blockPixmap.dispose();
+                } else {
+                    for (int i = 0; i < order.length; i++) {
+                        String key = order[i];
+                        if (!key.equals("BLANK") && textures.containsKey(key)) {
+                            BlockModelJsonTexture tex = textures.get(key);
+                            Texture blockTex = new Texture(GameAssetLoader.loadAsset("textures/blocks/" + tex.fileName));
+                            TextureData data = blockTex.getTextureData();
+                            data.prepare();
+                            Pixmap blockPixmap = data.consumePixmap();
+                            pixmap.drawPixmap(blockPixmap, positions[i][0], positions[i][1]);
+                            blockPixmap.dispose();
+                        }
+                    }
+                }
+
+                // Create a new Texture from the Pixmap
+                stitchedTexture[0] = new Texture(pixmap);
+                pixmap.dispose();
+        });
+
+        // Wait for the runnable to complete
+        while (stitchedTexture[0] == null) {
+            Thread.yield();
+        }
+
+        return stitchedTexture[0];
     }
 }

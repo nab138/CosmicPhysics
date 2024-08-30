@@ -19,12 +19,6 @@ public class PlayerEntityMixin extends Entity {
     public void update(Zone zone, double delta) {
         PhysicsWorld.tick(delta);
         super.update(zone, delta);
-//        if (PhysicsWorld.playerBody != null) {
-//            Vector3 pos = this.position.cpy();
-//            Vector3f physPos = new Vector3f(pos.x, pos.y + 2.5f, pos.z);
-//
-//            PhysicsWorld.playerBody.setPhysicsLocation(physPos);
-//        }
     }
 
     @Override

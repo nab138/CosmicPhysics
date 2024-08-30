@@ -1,7 +1,7 @@
 {
-  "id": "base:entity_model:screen",
+  "id": "base:entity_model:cube",
   "texture_width": 64,
-  "texture_height": 64,
+  "texture_height": 32,
   "bones": [
     {
       "name": "block",

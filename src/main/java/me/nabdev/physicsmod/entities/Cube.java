@@ -2,26 +2,34 @@ package me.nabdev.physicsmod.entities;
 
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.math.Quaternion;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.BoundingBox;
 import com.github.puzzle.core.Identifier;
+import com.github.puzzle.game.engine.blocks.models.PuzzleBlockModel;
+import com.github.puzzle.game.util.BlockUtil;
 import com.jme3.bullet.collision.shapes.BoxCollisionShape;
 import com.jme3.bullet.objects.PhysicsRigidBody;
 import com.jme3.math.Vector3f;
 import finalforeach.cosmicreach.GameSingletons;
 import finalforeach.cosmicreach.Threads;
 import finalforeach.cosmicreach.TickRunner;
+import finalforeach.cosmicreach.blocks.Block;
+import finalforeach.cosmicreach.blocks.BlockState;
 import finalforeach.cosmicreach.entities.Entity;
 import finalforeach.cosmicreach.entities.player.Player;
 import finalforeach.cosmicreach.gamestates.GameState;
 import finalforeach.cosmicreach.gamestates.InGame;
+import finalforeach.cosmicreach.io.CRBinDeserializer;
+import finalforeach.cosmicreach.io.CRBinSerializer;
 import finalforeach.cosmicreach.items.ItemStack;
+import finalforeach.cosmicreach.rendering.entities.EntityModel;
 import finalforeach.cosmicreach.world.Zone;
 import me.nabdev.physicsmod.Constants;
-import me.nabdev.physicsmod.items.Linker;
+import me.nabdev.physicsmod.items.PhysicsInfuser;
 import me.nabdev.physicsmod.utils.ICameraOwner;
-import me.nabdev.physicsmod.items.Launcher;
+import me.nabdev.physicsmod.items.GravityGun;
 import me.nabdev.physicsmod.utils.IPhysicsEntity;
 import me.nabdev.physicsmod.utils.PhysicsWorld;
 
@@ -32,31 +40,60 @@ public class Cube extends Entity implements IPhysicsEntity {
     private final PhysicsRigidBody body;
     public Quaternion rotation = new Quaternion();
     public boolean isMagnet = false;
-
     public float mass = 2.5f;
+    public Texture queuedTexture = null;
 
+    private BlockState blockState;
+    private Zone currentZone = null;
 
-    public Cube() {
+    public Cube(Vector3f pos, BlockState blockState) {
         super(id.toString());
+
         Threads.runOnMainThread(
                 () -> this.modelInstance = GameSingletons.entityModelLoader
                         .load(this, "model_cube.json", "cube.animation.json", "animation.screen.idle", "cheese.png").getNewModelInstance()
         );
         this.hasGravity = false;
+        this.blockState = blockState;
 
         PhysicsWorld.initialize();
-
-
         BoxCollisionShape boxShape = new BoxCollisionShape(new Vector3f(0.5f, 0.5f, 0.5f));
-        PerspectiveCamera cam = ((ICameraOwner) GameState.IN_GAME).browserMod$getCamera();
-        Vector3 offsetPos = PhysicsWorld.getPlayerPos().add(0, 1.5f, 0).add(cam.direction.cpy().scl(2f));
+        setPosition(pos.x, pos.y, pos.z);
         body = new PhysicsRigidBody(boxShape, mass);
-        body.setPhysicsLocation(new Vector3f(offsetPos.x, offsetPos.y, offsetPos.z));
+        body.setPhysicsLocation(pos);
         body.setFriction(1f);
 
         PhysicsWorld.addCube(this);
     }
 
+    public Cube() {
+        this(getSpawnPos(), Block.getInstance("block_cheese").getDefaultBlockState());
+    }
+
+    public void read(CRBinDeserializer deserial) {
+        super.read(deserial);
+        this.localBoundingBox.min.set(-0.5F, -0.5F, -0.5F);
+        this.localBoundingBox.max.set(0.5F, 0.5F, 0.5F);
+        this.localBoundingBox.update();
+        blockState = BlockState.getInstance(deserial.readString("blockID"));
+        setTexture(PhysicsWorld.createStitchedTexture(((PuzzleBlockModel)blockState.getModel()).getTextures()));
+        body.setPhysicsLocation(new Vector3f(position.x, position.y, position.z));
+        float[] rot = deserial.readFloatArray("rotation");
+        rotation = new Quaternion(rot[0], rot[1], rot[2], rot[3]);
+        body.setPhysicsRotation(new com.jme3.math.Quaternion(rot[0], rot[1], rot[2], rot[3]));
+    }
+
+    public void write(CRBinSerializer serial) {
+        super.write(serial);
+        serial.writeString("blockID", blockState.getSaveKey());
+        serial.writeFloatArray("rotation", new float[]{rotation.x, rotation.y, rotation.z, rotation.w});
+    }
+
+    public static Vector3f getSpawnPos() {
+        PerspectiveCamera cam = ((ICameraOwner) GameState.IN_GAME).browserMod$getCamera();
+        Vector3 offsetPos = PhysicsWorld.getPlayerPos().add(0, 1.5f, 0).add(cam.direction.cpy().scl(2f));
+        return new Vector3f(offsetPos.x, offsetPos.y, offsetPos.z);
+    }
 
 
     @Override
@@ -65,6 +102,7 @@ public class Cube extends Entity implements IPhysicsEntity {
             this.onDeath(zone);
             return;
         }
+        currentZone = zone;
         PhysicsWorld.alertChunk(zone, zone.getChunkAtPosition(this.position));
 
         if (isMagnet) {
@@ -91,11 +129,16 @@ public class Cube extends Entity implements IPhysicsEntity {
 
 
         this.getBoundingBox(this.globalBoundingBox);
+        this.updateEntityChunk(zone);
     }
 
     @Override
     public void render(Camera camera) {
         if (this.modelInstance == null) return;
+        if (queuedTexture != null) {
+            ((EntityModel) this.modelInstance.getModel()).diffuseTexture = queuedTexture;
+            queuedTexture = null;
+        }
         tmpRenderPos.set(this.lastRenderPosition);
         TickRunner.INSTANCE.partTickLerp(tmpRenderPos, this.position);
         this.lastRenderPosition.set(tmpRenderPos);
@@ -109,18 +152,20 @@ public class Cube extends Entity implements IPhysicsEntity {
     }
 
     @Override
-    public void onUseInteraction(Zone zone, Player player, ItemStack heldItemStack) {
-        if(heldItemStack == null) return;
-        if (heldItemStack.getItem().getID().equals(Launcher.id.toString())) {
+    public void onUseInteraction(Zone zonfe, Player player, ItemStack heldItemStack) {
+        if (heldItemStack == null) return;
+        if (heldItemStack.getItem().getID().equals(GravityGun.id.toString())) {
             if (isMagnet) return;
             PhysicsWorld.magnet(this);
-        } else if(heldItemStack.getItem().getID().equals(Linker.id.toString())) {
-            if(Linker.entityOne == null) {
-                Linker.entityOne = this;
-            } else if(Linker.entityTwo == null) {
-                Linker.entityTwo = this;
-                Linker.link();
-            }
+        } else if (heldItemStack.getItem().getID().equals(PhysicsInfuser.id.toString())) {
+            PhysicsInfuser.ignoreNextUse = true;
+            solidify();
+//            if (PhysicsInfuser.entityOne == null) {
+//                PhysicsInfuser.entityOne = this;
+//            } else if (PhysicsInfuser.entityTwo == null) {
+//                PhysicsInfuser.entityTwo = this;
+//                PhysicsInfuser.link();
+//            }
         }
     }
 
@@ -129,8 +174,8 @@ public class Cube extends Entity implements IPhysicsEntity {
     }
 
     @Override
-    public void hit(float amount){
-        if(isMagnet){
+    public void hit(float amount) {
+        if (isMagnet) {
             PhysicsWorld.dropMagnet();
         }
 
@@ -158,12 +203,33 @@ public class Cube extends Entity implements IPhysicsEntity {
 
     @Override
     public void forceActivate() {
-        if(body != null) body.activate(true);
+        if (body != null) body.activate(true);
     }
 
     @Override
     public void onDeath(Zone zone) {
-        PhysicsWorld.removeCube(this);
-        super.onDeath(zone);
+        if(PhysicsWorld.space != null) PhysicsWorld.removeCube(this);
+        if(zone != null) super.onDeath(zone);
+    }
+
+    @Override
+    public void setMass(float mass) {
+        if(mass == this.mass || mass < 0) return;
+        this.mass = mass;
+        body.setMass(mass);
+    }
+
+    @Override
+    public void solidify() {
+        this.onDeath(currentZone);
+        BlockUtil.setBlockAt(currentZone, blockState, new Vector3((float)Math.floor(position.x), (float)Math.floor(position.y), (float)Math.floor(position.z)));
+    }
+
+    public void setTexture(Texture tex) {
+        if (this.modelInstance == null) {
+            queuedTexture = tex;
+            return;
+        }
+        ((EntityModel) this.modelInstance.getModel()).diffuseTexture = tex;
     }
 }
