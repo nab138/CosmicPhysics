@@ -22,6 +22,7 @@ import finalforeach.cosmicreach.savelib.blockdata.IBlockData;
 import finalforeach.cosmicreach.world.Chunk;
 import finalforeach.cosmicreach.world.Zone;
 import me.nabdev.physicsmod.entities.Cube;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -79,16 +80,20 @@ public class PhysicsWorld {
         space.addCollisionObject(body);
     }
 
-    private static void addEntity(IPhysicsEntity entity){
+    public static void addEntity(IPhysicsEntity entity){
         allObjects.add(entity);
 
         addRigidBody(entity.getBody());
     }
 
+    public static void removeEntity(IPhysicsEntity entity){
+        allObjects.remove(entity);
+        space.removeCollisionObject(entity.getBody());
+    }
+
     public static void removeCube(Cube cube){
         cubes.remove(cube);
-        allObjects.remove(cube);
-        space.removeCollisionObject(cube.getBody());
+        removeEntity(cube);
     }
 
     public static void addCube(Cube cube){
@@ -144,6 +149,7 @@ public class PhysicsWorld {
     }
 
     public static void alertChunk(Zone zone, Chunk chunk){
+        if(chunk == null) return;
         addChunk(chunk);
         Array<Chunk> adjacentChunks = new Array<>();
         chunk.getAdjacentChunks(zone, adjacentChunks);

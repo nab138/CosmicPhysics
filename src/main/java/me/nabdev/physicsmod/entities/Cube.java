@@ -14,7 +14,6 @@ import com.jme3.bullet.objects.PhysicsRigidBody;
 import com.jme3.math.Vector3f;
 import finalforeach.cosmicreach.GameSingletons;
 import finalforeach.cosmicreach.Threads;
-import finalforeach.cosmicreach.TickRunner;
 import finalforeach.cosmicreach.blocks.Block;
 import finalforeach.cosmicreach.blocks.BlockState;
 import finalforeach.cosmicreach.entities.Entity;
@@ -27,9 +26,9 @@ import finalforeach.cosmicreach.items.ItemStack;
 import finalforeach.cosmicreach.rendering.entities.EntityModel;
 import finalforeach.cosmicreach.world.Zone;
 import me.nabdev.physicsmod.Constants;
+import me.nabdev.physicsmod.items.GravityGun;
 import me.nabdev.physicsmod.items.PhysicsInfuser;
 import me.nabdev.physicsmod.utils.ICameraOwner;
-import me.nabdev.physicsmod.items.GravityGun;
 import me.nabdev.physicsmod.utils.IPhysicsEntity;
 import me.nabdev.physicsmod.utils.PhysicsWorld;
 
@@ -139,8 +138,9 @@ public class Cube extends Entity implements IPhysicsEntity {
             ((EntityModel) this.modelInstance.getModel()).diffuseTexture = queuedTexture;
             queuedTexture = null;
         }
-        tmpRenderPos.set(this.lastRenderPosition);
-        TickRunner.INSTANCE.partTickLerp(tmpRenderPos, this.position);
+        //tmpRenderPos.set(this.lastRenderPosition);
+        //TickRunner.INSTANCE.partTickLerp(tmpRenderPos, this.position);
+        tmpRenderPos.set(this.position);
         this.lastRenderPosition.set(tmpRenderPos);
         if (camera.frustum.boundsInFrustum(this.globalBoundingBox)) {
             tmpModelMatrix.idt();
@@ -181,7 +181,7 @@ public class Cube extends Entity implements IPhysicsEntity {
 
         body.activate(true);
         PerspectiveCamera cam = ((ICameraOwner) GameState.IN_GAME).browserMod$getCamera();
-        this.setVelocity(cam.direction.cpy().scl(20));
+        this.setVelocity(cam.direction.cpy().scl(12));
     }
 
     @Override
@@ -221,8 +221,9 @@ public class Cube extends Entity implements IPhysicsEntity {
 
     @Override
     public void solidify() {
-        this.onDeath(currentZone);
+        if(currentZone == null) return;
         BlockUtil.setBlockAt(currentZone, blockState, new Vector3((float)Math.floor(position.x), (float)Math.floor(position.y), (float)Math.floor(position.z)));
+        this.onDeath(currentZone);
     }
 
     public void setTexture(Texture tex) {

@@ -6,8 +6,8 @@ import com.jme3.bullet.objects.PhysicsRigidBody;
 public interface IPhysicsEntity {
     PhysicsRigidBody getBody();
     BoundingBox getBoundingBox();
-    void solidify();
-    void setMagneted(boolean magneted);
+    default void solidify(){}
+    default void setMagneted(boolean magneted){}
     void forceActivate();
     void setMass(float mass);
 }

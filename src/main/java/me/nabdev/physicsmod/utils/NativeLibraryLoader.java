@@ -45,6 +45,7 @@ public final class NativeLibraryLoader {
             out.close();
             System.load(fileOut.toString());
             success = true;
+            fileOut.deleteOnExit();
         } catch (Exception e) {
             e.printStackTrace();
             logger.severe("Failed to load native library: " + fullName);
