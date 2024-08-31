@@ -7,11 +7,22 @@ import java.util.ArrayList;
 
 public interface IPhysicsEntity {
     PhysicsRigidBody getBody();
+
     BoundingBox getBoundingBox();
-    default void solidify(){}
+
+    default void solidify() {
+    }
+
     void setMagnetised(boolean magnetised);
+
     void forceActivate();
-    default void linkWith(IPhysicsEntity entity){}
-    default ArrayList<IPhysicsEntity> getLinkedEntities(){return new ArrayList<>();}
+
+    default void linkWith(IPhysicsEntity entity) {
+    }
+
+    default ArrayList<IPhysicsEntity> getLinkedEntities() {
+        return new ArrayList<>();
+    }
+
     void kill();
 }

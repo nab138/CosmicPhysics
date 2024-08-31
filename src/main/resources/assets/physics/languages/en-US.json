@@ -9,7 +9,9 @@
     "priority": 1000,
     "format_templates": {
       "example": {
-        "formatted": ["someone"]
+        "formatted": [
+          "someone"
+        ]
       }
     },
     "strings": {

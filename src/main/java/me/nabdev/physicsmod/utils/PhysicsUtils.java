@@ -13,7 +13,7 @@ import finalforeach.cosmicreach.world.Zone;
 import me.nabdev.physicsmod.entities.Cube;
 
 public class PhysicsUtils {
-    public static void applyMagnetForce(Vector3 position, PhysicsRigidBody body){
+    public static void applyMagnetForce(Vector3 position, PhysicsRigidBody body) {
         Player player = InGame.getLocalPlayer();
         Vector3 playerPos = player.getPosition().cpy().add(0, 2, 0);
         PerspectiveCamera cam = ((ICameraOwner) GameState.IN_GAME).browserMod$getCamera();
@@ -28,9 +28,9 @@ public class PhysicsUtils {
         body.activate(true);
     }
 
-    public static void createBlockAt(Vector3 pos, BlockState state, Zone zone){
+    public static void createBlockAt(Vector3 pos, BlockState state, Zone zone) {
         PhysicsWorld.initialize();
-        if(isEmpty(state)) return;
+        if (isEmpty(state)) return;
         Texture stitchedTexture = TextureUtils.getTextureForBlock(state);
         Cube e = new Cube(new Vector3f(pos.x, pos.y, pos.z), state);
         zone.addEntity(e);
@@ -38,7 +38,7 @@ public class PhysicsUtils {
         e.setMass(0);
     }
 
-    public static boolean isEmpty(BlockState b){
+    public static boolean isEmpty(BlockState b) {
         return b == null || b.walkThrough;
     }
 }

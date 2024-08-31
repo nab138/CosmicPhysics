@@ -13,7 +13,8 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 @Mixin(EntityModelInstance.class)
 public abstract class EntityModelInstanceMixin implements IPhysicsModelInstance {
 
-    @Unique public Color physicsMod$tint = Color.WHITE;
+    @Unique
+    public Color physicsMod$tint = Color.WHITE;
 
     @Unique
     private final float[] physicsMod$tmpVec4 = new float[4];

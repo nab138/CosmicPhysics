@@ -22,7 +22,6 @@ public class GravityGun implements IModItem {
     public void use(ItemSlot slot, Player player) {
         if (PhysicsWorld.magnetEntity != null) {
             if (isMag) PhysicsWorld.dropMagnet();
-            isMag = !isMag;
         }
     }
 

@@ -12,7 +12,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(InGame.class)
 public class InGameMixin implements ICameraOwner {
-    @Shadow private static PerspectiveCamera rawWorldCamera;
+    @Shadow
+    private static PerspectiveCamera rawWorldCamera;
 
     @Inject(method = "unloadWorld", at = @At("HEAD"))
     private void unload(CallbackInfo ci) {

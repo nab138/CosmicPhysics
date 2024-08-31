@@ -74,7 +74,7 @@ public class Cube extends Entity implements IPhysicsEntity {
 
         PhysicsWorld.addCube(this);
 
-        if(ropeTexture == null) {
+        if (ropeTexture == null) {
             ropeTexture = TextureUtils.getTextureForBlock(Block.getInstance("block_metal_panel").getDefaultBlockState());
         }
     }
@@ -94,7 +94,7 @@ public class Cube extends Entity implements IPhysicsEntity {
         float[] rot = deserialize.readFloatArray("rotation");
         rotation = new Quaternion(rot[0], rot[1], rot[2], rot[3]);
         body.setPhysicsRotation(new com.jme3.math.Quaternion(rot[0], rot[1], rot[2], rot[3]));
-        if(deserialize.readBoolean("isMagnet", false)) {
+        if (deserialize.readBoolean("isMagnet", false)) {
             PhysicsWorld.magnet(this);
         }
     }
@@ -155,8 +155,8 @@ public class Cube extends Entity implements IPhysicsEntity {
             this.modelInstance.render(this, camera, tmpModelMatrix);
         }
 
-        if(!PhysicsWorld.queuedLinks.isEmpty()) return;
-        for(IPhysicsEntity linkedEntity : linkedEntities) {
+        if (!PhysicsWorld.queuedLinks.isEmpty()) return;
+        for (IPhysicsEntity linkedEntity : linkedEntities) {
             // Place the entity directly between the two linked entities
             Vector3f linkedPosF = linkedEntity.getBody().getPhysicsLocation(null);
             Vector3 linkedPos = new Vector3(linkedPosF.x, linkedPosF.y, linkedPosF.z);
@@ -259,11 +259,11 @@ public class Cube extends Entity implements IPhysicsEntity {
     public void onDeath(Zone zone) {
         Linker.clearLinksFor(this);
         PhysicsWorld.removeCube(this);
-        if(zone != null) super.onDeath(zone);
+        if (zone != null) super.onDeath(zone);
     }
 
     public void setMass(float mass) {
-        if(mass == this.mass || mass < 0) return;
+        if (mass == this.mass || mass < 0) return;
         this.mass = mass;
         body.setMass(mass);
     }
@@ -280,9 +280,9 @@ public class Cube extends Entity implements IPhysicsEntity {
 
     @Override
     public void solidify() {
-        if(currentZone == null) return;
+        if (currentZone == null) return;
 
-        BlockUtil.setBlockAt(currentZone, blockState, new Vector3((float)Math.floor(position.x), (float)Math.floor(position.y), (float)Math.floor(position.z)));
+        BlockUtil.setBlockAt(currentZone, blockState, new Vector3((float) Math.floor(position.x), (float) Math.floor(position.y), (float) Math.floor(position.z)));
         this.onDeath(currentZone);
     }
 
@@ -303,7 +303,7 @@ public class Cube extends Entity implements IPhysicsEntity {
     }
 
     @Override
-    public void kill(){
+    public void kill() {
         this.onDeath(currentZone);
     }
 }

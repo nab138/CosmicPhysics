@@ -47,7 +47,8 @@ public abstract class ItemEntityMixin extends Entity implements IPhysicsEntity {
     @Shadow
     float renderSize;
 
-    @Shadow protected abstract void die(Zone zone);
+    @Shadow
+    protected abstract void die(Zone zone);
 
     @Unique
     public Zone physicsMod$currentZone;
@@ -55,19 +56,19 @@ public abstract class ItemEntityMixin extends Entity implements IPhysicsEntity {
     @Override
     public void onDeath(Zone zone) {
         super.onDeath(zone);
-        if(physicsMod$body != null) PhysicsWorld.removeEntity(this);
+        if (physicsMod$body != null) PhysicsWorld.removeEntity(this);
     }
 
-    @Inject(method="update", at=@At("TAIL"))
+    @Inject(method = "update", at = @At("TAIL"))
     public void update(Zone zone, double deltaTime, CallbackInfo ci) {
         physicsMod$currentZone = zone;
         if (!PhysicsWorld.isRunning) {
-            if(physicsMod$body == null) PhysicsWorld.initialize();
+            if (physicsMod$body == null) PhysicsWorld.initialize();
             else die(zone);
             return;
         }
         hasGravity = false;
-        if(physicsMod$body == null){
+        if (physicsMod$body == null) {
             BoxCollisionShape boxShape = new BoxCollisionShape(new Vector3f(0.5f, 0.5f, 0.5f).mult(renderSize));
             physicsMod$body = new PhysicsRigidBody(boxShape, 0.5f);
             physicsMod$body.setPhysicsLocation(new Vector3f(position.x, position.y, position.z));

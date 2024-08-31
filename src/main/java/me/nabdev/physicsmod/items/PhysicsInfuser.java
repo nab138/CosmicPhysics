@@ -44,13 +44,13 @@ public class PhysicsInfuser implements IModItem {
 
     @Override
     public void use(ItemSlot slot, Player player) {
-        if(ignoreNextUse) {
+        if (ignoreNextUse) {
             ignoreNextUse = false;
             return;
         }
         BlockState block = BlockSelection.getBlockLookingAt();
         BlockPosition pos = BlockSelection.getBlockPositionLookingAt();
-        if(block == null || pos == null) {
+        if (block == null || pos == null) {
             return;
         }
 

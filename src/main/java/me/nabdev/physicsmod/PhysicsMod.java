@@ -4,6 +4,7 @@ import com.github.puzzle.core.PuzzleRegistries;
 import com.github.puzzle.game.events.OnPreLoadAssetsEvent;
 import com.github.puzzle.game.items.IModItem;
 import com.github.puzzle.loader.entrypoint.interfaces.ModInitializer;
+import com.jme3.bullet.objects.PhysicsRigidBody;
 import finalforeach.cosmicreach.entities.EntityCreator;
 import me.nabdev.physicsmod.commands.Commands;
 import me.nabdev.physicsmod.entities.Cube;
@@ -12,6 +13,8 @@ import me.nabdev.physicsmod.items.Linker;
 import me.nabdev.physicsmod.items.PhysicsInfuser;
 import me.nabdev.physicsmod.utils.NativeLibraryLoader;
 import org.greenrobot.eventbus.Subscribe;
+
+import java.util.logging.Level;
 
 @SuppressWarnings("unused")
 public class PhysicsMod implements ModInitializer {
@@ -25,12 +28,14 @@ public class PhysicsMod implements ModInitializer {
 
         Commands.register();
 
-        boolean success = NativeLibraryLoader.loadLibbulletjme("Debug", "Sp");
+        boolean success = NativeLibraryLoader.loadLibbulletjme("Release", "Sp");
         if (!success) {
             throw new RuntimeException("Failed to load native library. Please contact nab138, he may need to add support for your platform.");
         }
+        PhysicsRigidBody.logger2.setLevel(Level.WARNING);
     }
 
     @Subscribe
-    public void onEvent(OnPreLoadAssetsEvent event) {}
+    public void onEvent(OnPreLoadAssetsEvent event) {
+    }
 }

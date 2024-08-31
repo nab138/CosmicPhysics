@@ -17,7 +17,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 public class Linker implements IModItem {
-    public record LinkData(IPhysicsEntity other, New6Dof joint) {}
+    public record LinkData(IPhysicsEntity other, New6Dof joint) {
+    }
+
     final DataTagManifest tagManifest = new DataTagManifest();
     public static final Identifier id = new Identifier(Constants.MOD_ID, "linker");
     public static IPhysicsEntity entityOne = null;
@@ -79,10 +81,10 @@ public class Linker implements IModItem {
     public static void clearLinksFor(IPhysicsEntity entity) {
         if (links.containsKey(entity)) {
             for (LinkData linkData : links.get(entity)) {
-                if(PhysicsWorld.space != null) PhysicsWorld.space.removeJoint(linkData.joint);
+                if (PhysicsWorld.space != null) PhysicsWorld.space.removeJoint(linkData.joint);
                 linkData.other.getLinkedEntities().remove(entity);
                 ArrayList<LinkData> otherLinkData = links.get(linkData.other);
-                if(otherLinkData != null) otherLinkData.remove(linkData);
+                if (otherLinkData != null) otherLinkData.remove(linkData);
             }
             links.remove(entity);
         }

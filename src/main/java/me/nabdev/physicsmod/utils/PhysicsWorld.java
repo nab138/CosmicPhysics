@@ -14,6 +14,7 @@ import finalforeach.cosmicreach.savelib.blockdata.IBlockData;
 import finalforeach.cosmicreach.world.Chunk;
 import finalforeach.cosmicreach.world.Zone;
 import me.nabdev.physicsmod.entities.Cube;
+import me.nabdev.physicsmod.items.GravityGun;
 import me.nabdev.physicsmod.items.Linker;
 
 import java.util.ArrayList;
@@ -26,11 +27,12 @@ public class PhysicsWorld {
         public PhysicsRigidBody body;
         public boolean isValid;
 
-        public ChunkBodyData(){
+        public ChunkBodyData() {
             this.body = null;
             this.isValid = false;
         }
     }
+
     public static final ArrayList<IPhysicsEntity> allObjects = new ArrayList<>();
     public static final ArrayList<Cube> cubes = new ArrayList<>();
     public static PhysicsSpace space;
@@ -46,12 +48,14 @@ public class PhysicsWorld {
 
     public static final ArrayList<IPhysicsEntity[]> queuedLinks = new ArrayList<>();
 
-    public static void initialize(){
+    public static IPhysicsEntity queuedMagnetEntity = null;
+
+    public static void initialize() {
         readyToInitialize = true;
     }
 
-    private static void runInit(){
-        if(space != null || isRunning) return;
+    private static void runInit() {
+        if (space != null || isRunning) return;
         readyToInitialize = false;
         isRunning = true;
         initializeWorld();
@@ -62,51 +66,57 @@ public class PhysicsWorld {
         space.setGravity(new Vector3f(0, -9.81f, 0));
     }
 
-    public static Vector3 getPlayerPos(){
+    public static Vector3 getPlayerPos() {
         return InGame.getLocalPlayer().getPosition().cpy();
     }
 
-    private static void addRigidBody(PhysicsRigidBody body){
-        if(space == null){
+    private static void addRigidBody(PhysicsRigidBody body) {
+        if (space == null) {
             queuedBodies.add(body);
             return;
         }
         space.addCollisionObject(body);
     }
 
-    public static void addEntity(IPhysicsEntity entity){
+    public static void addEntity(IPhysicsEntity entity) {
         allObjects.add(entity);
         addRigidBody(entity.getBody());
     }
 
-    public static void removeEntity(IPhysicsEntity entity){
+    public static void removeEntity(IPhysicsEntity entity) {
         allObjects.remove(entity);
-        if(space != null){
+        if (space != null) {
             space.removeCollisionObject(entity.getBody());
         }
     }
 
-    public static void removeCube(Cube cube){
+    public static void removeCube(Cube cube) {
         cubes.remove(cube);
         removeEntity(cube);
     }
 
-    public static void addCube(Cube cube){
+    public static void addCube(Cube cube) {
         cubes.add(cube);
         addEntity(cube);
     }
 
     public static void dropMagnet() {
-        if(magnetEntity != null) {
+        if (magnetEntity != null) {
             magnetEntity.setMagnetised(false);
             magnetEntity = null;
+            GravityGun.isMag = false;
         }
     }
 
     public static void magnet(IPhysicsEntity entity) {
+        queuedMagnetEntity = entity;
+    }
+
+    private static void setMagnet(IPhysicsEntity entity) {
         dropMagnet();
         magnetEntity = entity;
         magnetEntity.setMagnetised(true);
+        GravityGun.isMag = true;
     }
 
     public static void reset() {
@@ -123,23 +133,23 @@ public class PhysicsWorld {
         queuedBodies.clear();
         isRunning = false;
 
-        if(magnetEntity != null) {
+        if (magnetEntity != null) {
             magnetEntity.setMagnetised(false);
             magnetEntity = null;
         }
     }
 
-    public static void tick(double delta){
-        if(!isRunning && readyToInitialize) runInit();
-        if(!isRunning || space == null) return;
-        if(!queuedBodies.isEmpty()){
-            for(PhysicsRigidBody body : queuedBodies){
+    public static void tick(double delta) {
+        if (!isRunning && readyToInitialize) runInit();
+        if (!isRunning || space == null) return;
+        if (!queuedBodies.isEmpty()) {
+            for (PhysicsRigidBody body : queuedBodies) {
                 space.addCollisionObject(body);
             }
             queuedBodies.clear();
         }
-        for(IPhysicsEntity[] link : queuedLinks){
-            if(link[0] != null && link[1] != null){
+        for (IPhysicsEntity[] link : queuedLinks) {
+            if (link[0] != null && link[1] != null) {
                 Linker.entityOne = link[0];
                 Linker.entityTwo = link[1];
                 Linker.link();
@@ -147,37 +157,42 @@ public class PhysicsWorld {
                 Linker.entityTwo = null;
             }
         }
+        if (queuedMagnetEntity != null) {
+            setMagnet(queuedMagnetEntity);
+            queuedMagnetEntity = null;
+        }
         queuedLinks.clear();
         space.update((float) delta);
     }
 
-    public static void alertChunk(Zone zone, Chunk chunk){
-        if(chunk == null) return;
+    public static void alertChunk(Zone zone, Chunk chunk) {
+        if (chunk == null) return;
         addChunk(chunk);
         Array<Chunk> adjacentChunks = new Array<>();
         chunk.getAdjacentChunks(zone, adjacentChunks);
-        for(Chunk c : adjacentChunks){
+        for (Chunk c : adjacentChunks) {
             addChunk(c);
         }
     }
 
-    private static void addChunk(Chunk chunk){
-        if(chunk == null) return;
+    private static void addChunk(Chunk chunk) {
+        if (chunk == null) return;
         boolean seenBefore = chunkBodies.containsKey(chunk);
         ChunkBodyData chunkData = chunkBodies.get(chunk);
-        if(seenBefore && chunkData != null && chunkData.isValid && chunkData.body != null) return;
-        else if(chunkData == null) chunkData = new ChunkBodyData();
+        if (seenBefore && chunkData != null && chunkData.isValid && chunkData.body != null) return;
+        else if (chunkData == null) chunkData = new ChunkBodyData();
 
         //noinspection ALL
-        IBlockData<BlockState>  blockData = (IBlockData<BlockState>) chunk.getBlockData();
-        if(blockData == null || blockData.isEntirely(Block.AIR.getDefaultBlockState()) || blockData.isEntirely(Block.WATER.getDefaultBlockState())) return;
+        IBlockData<BlockState> blockData = (IBlockData<BlockState>) chunk.getBlockData();
+        if (blockData == null || blockData.isEntirely(Block.AIR.getDefaultBlockState()) || blockData.isEntirely(Block.WATER.getDefaultBlockState()))
+            return;
 
         CompoundCollisionShape chunkShape = new CompoundCollisionShape();
-        for(int x = 0; x < 16; x++){
-            for(int y = 0; y < 16; y++){
-                for(int z = 0; z < 16; z++){
+        for (int x = 0; x < 16; x++) {
+            for (int y = 0; y < 16; y++) {
+                for (int z = 0; z < 16; z++) {
                     BlockState state = blockData.getBlockValue(x, y, z);
-                    if(isEmpty(state)) continue;
+                    if (isEmpty(state)) continue;
                     Vector3 pos = new Vector3(x, y, z);
                     BoxCollisionShape boxShape = new BoxCollisionShape(new Vector3f(0.5f, 0.5f, 0.5f));
                     chunkShape.addChildShape(boxShape, new Vector3f(pos.x + 0.5f, pos.y + 0.5f, pos.z + 0.5f));
@@ -186,7 +201,7 @@ public class PhysicsWorld {
         }
 
         chunkData.isValid = true;
-        if(!seenBefore) {
+        if (!seenBefore) {
             PhysicsRigidBody body = new PhysicsRigidBody(chunkShape, 0);
             body.setPhysicsLocation(new Vector3f(chunk.getBlockX(), chunk.getBlockY(), chunk.getBlockZ()));
             addRigidBody(body);
@@ -195,15 +210,15 @@ public class PhysicsWorld {
         } else {
             chunkData.body.setCollisionShape(chunkShape);
         }
-        for(Cube cube : cubes){
+        for (Cube cube : cubes) {
             cube.setMass(2.5f);
         }
     }
 
-    public static void invalidateChunk(Chunk chunk){
-        if(chunk == null || !chunkBodies.containsKey(chunk)) return;
+    public static void invalidateChunk(Chunk chunk) {
+        if (chunk == null || !chunkBodies.containsKey(chunk)) return;
         chunkBodies.get(chunk).isValid = false;
-        for(IPhysicsEntity entity : allObjects){
+        for (IPhysicsEntity entity : allObjects) {
             entity.forceActivate();
         }
     }
