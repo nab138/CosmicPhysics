@@ -6,11 +6,6 @@ import com.github.puzzle.core.resources.ResourceLocation;
 import com.github.puzzle.game.items.IModItem;
 import com.github.puzzle.game.items.data.DataTagManifest;
 import com.github.puzzle.game.util.BlockUtil;
-import com.jme3.bullet.RotationOrder;
-import com.jme3.bullet.joints.New6Dof;
-import com.jme3.bullet.objects.PhysicsRigidBody;
-import com.jme3.math.Matrix3f;
-import com.jme3.math.Vector3f;
 import finalforeach.cosmicreach.BlockSelection;
 import finalforeach.cosmicreach.blocks.Block;
 import finalforeach.cosmicreach.blocks.BlockPosition;
@@ -20,15 +15,11 @@ import finalforeach.cosmicreach.gamestates.InGame;
 import finalforeach.cosmicreach.items.ItemSlot;
 import finalforeach.cosmicreach.world.Zone;
 import me.nabdev.physicsmod.Constants;
-import me.nabdev.physicsmod.utils.IPhysicsEntity;
 import me.nabdev.physicsmod.utils.PhysicsWorld;
 
 public class PhysicsInfuser implements IModItem {
     DataTagManifest tagManifest = new DataTagManifest();
     public static Identifier id = new Identifier(Constants.MOD_ID, "infuser");
-
-    public static IPhysicsEntity entityOne = null;
-    public static IPhysicsEntity entityTwo = null;
 
     public static boolean ignoreNextUse = false;
 
@@ -66,30 +57,5 @@ public class PhysicsInfuser implements IModItem {
         Zone z = player.getZone(InGame.world);
         BlockUtil.setBlockAt(z, Block.AIR.getDefaultBlockState(), pos);
         PhysicsWorld.createBlockAt(new Vector3(pos.getGlobalX(), pos.getGlobalY(), pos.getGlobalZ()).add(0.5f), block, z);
-    }
-
-    @Override
-    public boolean isCatalogHidden() {
-        return false;
-    }
-
-    public static void link() {
-        if (entityOne == null || entityTwo == null) {
-            return;
-        }
-
-        PhysicsRigidBody bodyOne = entityOne.getBody();
-        PhysicsRigidBody bodyTwo = entityTwo.getBody();
-
-        // Define pivots and rotations
-        Vector3f pivotInBall = new Vector3f(0.5f, 0f, 0f);
-        Vector3f pivotInPaddle = new Vector3f(-0.5f, 0f, 0f);
-        Matrix3f rotInBall = Matrix3f.IDENTITY;
-        Matrix3f rotInPaddle = Matrix3f.IDENTITY;
-        New6Dof joint = new New6Dof(
-                bodyOne, bodyTwo, pivotInBall, pivotInPaddle,
-                rotInBall, rotInPaddle, RotationOrder.XYZ);
-        PhysicsWorld.space.addJoint(joint);
-        System.out.println("Linked!");
     }
 }

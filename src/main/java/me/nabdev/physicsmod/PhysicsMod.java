@@ -8,6 +8,7 @@ import finalforeach.cosmicreach.entities.EntityCreator;
 import me.nabdev.physicsmod.commands.Commands;
 import me.nabdev.physicsmod.entities.Cube;
 import me.nabdev.physicsmod.items.GravityGun;
+import me.nabdev.physicsmod.items.Linker;
 import me.nabdev.physicsmod.items.PhysicsInfuser;
 import me.nabdev.physicsmod.utils.NativeLibraryLoader;
 import org.greenrobot.eventbus.Subscribe;
@@ -20,6 +21,7 @@ public class PhysicsMod implements ModInitializer {
         EntityCreator.registerEntityCreator(Cube.id.toString(), Cube::new);
         IModItem.registerItem(new GravityGun());
         IModItem.registerItem(new PhysicsInfuser());
+        IModItem.registerItem(new Linker());
 
         Commands.register();
 

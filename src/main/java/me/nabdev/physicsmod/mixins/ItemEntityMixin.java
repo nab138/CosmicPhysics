@@ -36,6 +36,7 @@ public abstract class ItemEntityMixin extends Entity implements IPhysicsEntity {
     @Unique
     public Quaternion rotation = new Quaternion();
 
+
     @Unique
     public boolean isMagnet = false;
 
@@ -55,7 +56,8 @@ public abstract class ItemEntityMixin extends Entity implements IPhysicsEntity {
     @Inject(method="update", at=@At("TAIL"))
     public void update(Zone zone, double deltaTime, CallbackInfo ci) {
         if (!PhysicsWorld.isRunning) {
-            die(zone);
+            if(body == null) PhysicsWorld.initialize();
+            else die(zone);
             return;
         }
         hasGravity = false;
@@ -161,6 +163,4 @@ public abstract class ItemEntityMixin extends Entity implements IPhysicsEntity {
     public void setVelocity(Vector3 vel) {
         body.setLinearVelocity(new Vector3f(vel.x, vel.y, vel.z));
     }
-
-
 }

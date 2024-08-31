@@ -22,6 +22,7 @@ import finalforeach.cosmicreach.savelib.blockdata.IBlockData;
 import finalforeach.cosmicreach.world.Chunk;
 import finalforeach.cosmicreach.world.Zone;
 import me.nabdev.physicsmod.entities.Cube;
+import me.nabdev.physicsmod.items.Linker;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -45,12 +46,13 @@ public class PhysicsWorld {
     private static final HashMap<BlockState, Texture> blockTextures = new HashMap<>();
     private static final ArrayList<PhysicsRigidBody> queuedBodies = new ArrayList<>();
     public static IPhysicsEntity magnetEntity = null;
-    // public static PhysicsRigidBody playerBody;
 
     public static boolean isMagneting = false;
     public static boolean isRunning = false;
 
     public static boolean readyToInitialize = false;
+
+    public static ArrayList<IPhysicsEntity[]> queuedLinks = new ArrayList<>();
 
     public static void initialize(){
         readyToInitialize = true;
@@ -82,13 +84,12 @@ public class PhysicsWorld {
 
     public static void addEntity(IPhysicsEntity entity){
         allObjects.add(entity);
-
         addRigidBody(entity.getBody());
     }
 
     public static void removeEntity(IPhysicsEntity entity){
         allObjects.remove(entity);
-        space.removeCollisionObject(entity.getBody());
+        if(space != null) space.removeCollisionObject(entity.getBody());
     }
 
     public static void removeCube(Cube cube){
@@ -145,6 +146,16 @@ public class PhysicsWorld {
             }
             queuedBodies.clear();
         }
+        for(IPhysicsEntity[] link : queuedLinks){
+            if(link[0] != null && link[1] != null){
+                Linker.entityOne = link[0];
+                Linker.entityTwo = link[1];
+                Linker.link();
+                Linker.entityOne = null;
+                Linker.entityTwo = null;
+            }
+        }
+        queuedLinks.clear();
         space.update((float) delta);
     }
 
@@ -165,6 +176,7 @@ public class PhysicsWorld {
         if(seenBefore && chunkData != null && chunkData.isValid && chunkData.body != null) return;
         else if(chunkData == null) chunkData = new ChunkBodyData();
 
+        //noinspection ALL
         IBlockData<BlockState>  blockData = (IBlockData<BlockState>) chunk.getBlockData();
         if(blockData == null || blockData.isEntirely(Block.AIR.getDefaultBlockState()) || blockData.isEntirely(Block.WATER.getDefaultBlockState())) return;
 
