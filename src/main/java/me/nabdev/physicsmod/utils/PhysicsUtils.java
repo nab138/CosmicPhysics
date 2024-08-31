@@ -11,8 +11,16 @@ import finalforeach.cosmicreach.gamestates.GameState;
 import finalforeach.cosmicreach.gamestates.InGame;
 import finalforeach.cosmicreach.world.Zone;
 import me.nabdev.physicsmod.entities.Cube;
+import me.nabdev.physicsmod.items.Linker;
+
+import java.util.ArrayList;
 
 public class PhysicsUtils {
+    public record QueuedLink(IPhysicsEntity e, int id) {
+    }
+
+    public static ArrayList<QueuedLink> queuedLinks = new ArrayList<>();
+
     public static void applyMagnetForce(Vector3 position, PhysicsRigidBody body) {
         Player player = InGame.getLocalPlayer();
         Vector3 playerPos = player.getPosition().cpy().add(0, 2, 0);
@@ -40,5 +48,23 @@ public class PhysicsUtils {
 
     public static boolean isEmpty(BlockState b) {
         return b == null || b.walkThrough;
+    }
+
+    public static void queueLinks(IPhysicsEntity a, int[] ids) {
+        for (int id : ids) {
+            queuedLinks.add(new QueuedLink(a, id));
+        }
+    }
+
+    public static void applyQueuedLinks() {
+        if (queuedLinks.isEmpty()) return;
+        for (QueuedLink link : queuedLinks) {
+            IPhysicsEntity a = link.e;
+            IPhysicsEntity b = PhysicsWorld.getEntityById(link.id);
+            if (b == null) continue;
+            Linker.link(a, b);
+            a.linkWith(b);
+        }
+        queuedLinks.clear();
     }
 }

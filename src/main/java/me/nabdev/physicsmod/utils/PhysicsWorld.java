@@ -15,7 +15,6 @@ import finalforeach.cosmicreach.world.Chunk;
 import finalforeach.cosmicreach.world.Zone;
 import me.nabdev.physicsmod.entities.Cube;
 import me.nabdev.physicsmod.items.GravityGun;
-import me.nabdev.physicsmod.items.Linker;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -45,9 +44,6 @@ public class PhysicsWorld {
     public static boolean isRunning = false;
 
     public static boolean readyToInitialize = false;
-
-    public static final ArrayList<IPhysicsEntity[]> queuedLinks = new ArrayList<>();
-
     public static IPhysicsEntity queuedMagnetEntity = null;
 
     public static void initialize() {
@@ -148,20 +144,11 @@ public class PhysicsWorld {
             }
             queuedBodies.clear();
         }
-        for (IPhysicsEntity[] link : queuedLinks) {
-            if (link[0] != null && link[1] != null) {
-                Linker.entityOne = link[0];
-                Linker.entityTwo = link[1];
-                Linker.link();
-                Linker.entityOne = null;
-                Linker.entityTwo = null;
-            }
-        }
         if (queuedMagnetEntity != null) {
             setMagnet(queuedMagnetEntity);
             queuedMagnetEntity = null;
         }
-        queuedLinks.clear();
+        PhysicsUtils.applyQueuedLinks();
         space.update((float) delta);
     }
 
@@ -221,5 +208,12 @@ public class PhysicsWorld {
         for (IPhysicsEntity entity : allObjects) {
             entity.forceActivate();
         }
+    }
+
+    public static IPhysicsEntity getEntityById(int id) {
+        for (IPhysicsEntity entity : allObjects) {
+            if (entity.getID() == id) return entity;
+        }
+        return null;
     }
 }

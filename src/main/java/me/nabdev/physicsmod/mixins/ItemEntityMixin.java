@@ -165,4 +165,10 @@ public abstract class ItemEntityMixin extends Entity implements IPhysicsEntity {
         assert physicsMod$currentZone != null;
         die(physicsMod$currentZone);
     }
+
+    @SuppressWarnings("all")
+    @Override
+    public int getID() {
+        return -1;
+    }
 }

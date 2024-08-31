@@ -7,6 +7,7 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.math.Quaternion;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.BoundingBox;
+import com.badlogic.gdx.utils.Array;
 import com.github.puzzle.core.Identifier;
 import com.github.puzzle.game.util.BlockUtil;
 import com.jme3.bullet.collision.shapes.BoxCollisionShape;
@@ -33,10 +34,9 @@ import me.nabdev.physicsmod.items.Linker;
 import me.nabdev.physicsmod.items.PhysicsInfuser;
 import me.nabdev.physicsmod.utils.*;
 
-import java.util.ArrayList;
+import java.util.Random;
 
 public class Cube extends Entity implements IPhysicsEntity {
-
     public static final Identifier id = new Identifier(Constants.MOD_ID, "cube");
 
     private final PhysicsRigidBody body;
@@ -48,12 +48,15 @@ public class Cube extends Entity implements IPhysicsEntity {
     private BlockState blockState;
     private Zone currentZone = null;
 
-    private final ArrayList<IPhysicsEntity> linkedEntities = new ArrayList<>();
+    private final Array<IPhysicsEntity> linkedEntities = new Array<>(false, 0, IPhysicsEntity.class);
 
     public static Texture ropeTexture;
 
     final BlockPosition tmpBlockPos = new BlockPosition(null, 0, 0, 0);
     final Color tinyTint = Color.WHITE.cpy();
+
+    public int physicsID = -1;
+    public static Random random = new Random();
 
     public Cube(Vector3f pos, BlockState blockState) {
         super(id.toString());
@@ -77,6 +80,9 @@ public class Cube extends Entity implements IPhysicsEntity {
         if (ropeTexture == null) {
             ropeTexture = TextureUtils.getTextureForBlock(Block.getInstance("block_metal_panel").getDefaultBlockState());
         }
+
+        // Get random physics ID between min integer value and max integer value
+        physicsID = random.nextInt();
     }
 
     public Cube() {
@@ -97,6 +103,9 @@ public class Cube extends Entity implements IPhysicsEntity {
         if (deserialize.readBoolean("isMagnet", false)) {
             PhysicsWorld.magnet(this);
         }
+        physicsID = deserialize.readInt("physicsID", physicsID);
+        int[] linkedIDs = deserialize.readIntArray("linkedEntities");
+        PhysicsUtils.queueLinks(this, linkedIDs);
     }
 
     public void write(CRBinSerializer serial) {
@@ -104,6 +113,12 @@ public class Cube extends Entity implements IPhysicsEntity {
         serial.writeString("blockID", blockState.getSaveKey());
         serial.writeFloatArray("rotation", new float[]{rotation.x, rotation.y, rotation.z, rotation.w});
         serial.writeBoolean("isMagnet", isMagnet);
+        serial.writeInt("physicsID", physicsID);
+        int[] linkedIDs = new int[linkedEntities.size];
+        for (int i = 0; i < linkedEntities.size; i++) {
+            linkedIDs[i] = linkedEntities.get(i).getID();
+        }
+        serial.writeIntArray("linkedEntities", linkedIDs);
     }
 
     public static Vector3f getSpawnPos() {
@@ -155,7 +170,6 @@ public class Cube extends Entity implements IPhysicsEntity {
             this.modelInstance.render(this, camera, tmpModelMatrix);
         }
 
-        if (!PhysicsWorld.queuedLinks.isEmpty()) return;
         for (IPhysicsEntity linkedEntity : linkedEntities) {
             // Place the entity directly between the two linked entities
             Vector3f linkedPosF = linkedEntity.getBody().getPhysicsLocation(null);
@@ -274,7 +288,7 @@ public class Cube extends Entity implements IPhysicsEntity {
     }
 
     @Override
-    public ArrayList<IPhysicsEntity> getLinkedEntities() {
+    public Array<IPhysicsEntity> getLinkedEntities() {
         return linkedEntities;
     }
 
@@ -305,5 +319,10 @@ public class Cube extends Entity implements IPhysicsEntity {
     @Override
     public void kill() {
         this.onDeath(currentZone);
+    }
+
+    @Override
+    public int getID() {
+        return physicsID;
     }
 }

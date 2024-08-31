@@ -14,6 +14,7 @@ import me.nabdev.physicsmod.utils.IPhysicsEntity;
 import me.nabdev.physicsmod.utils.PhysicsWorld;
 
 import java.util.ArrayList;
+import java.util.ConcurrentModificationException;
 import java.util.HashMap;
 
 public class Linker implements IModItem {
@@ -32,21 +33,24 @@ public class Linker implements IModItem {
         addTexture(IModItem.MODEL_2_5D_ITEM, new ResourceLocation(Constants.MOD_ID, "textures/items/linker.png"));
     }
 
+    public static void link(IPhysicsEntity eOne, IPhysicsEntity eTwo) {
+        PhysicsRigidBody bodyOne = eOne.getBody();
+        PhysicsRigidBody bodyTwo = eTwo.getBody();
+
+        Vector3f diff = bodyOne.getPhysicsLocation(null).subtract(bodyTwo.getPhysicsLocation(null));
+        New6Dof joint = new New6Dof(bodyOne, bodyTwo, diff, Vector3f.ZERO, Matrix3f.IDENTITY, Matrix3f.IDENTITY, RotationOrder.XYZ);
+        PhysicsWorld.space.addJoint(joint);
+
+        addLinkTo(eOne, new LinkData(eTwo, joint));
+        addLinkTo(eTwo, new LinkData(eTwo, joint));
+    }
+
     public static void link() {
         if (entityOne == null || entityTwo == null) {
             return;
         }
 
-        PhysicsRigidBody bodyOne = entityOne.getBody();
-        PhysicsRigidBody bodyTwo = entityTwo.getBody();
-
-        Vector3f diff = bodyOne.getPhysicsLocation(null).subtract(bodyTwo.getPhysicsLocation(null));
-
-        New6Dof joint = new New6Dof(bodyOne, bodyTwo, diff, Vector3f.ZERO, Matrix3f.IDENTITY, Matrix3f.IDENTITY, RotationOrder.XYZ);
-        PhysicsWorld.space.addJoint(joint);
-        addLinkTo(entityOne, new LinkData(entityTwo, joint));
-        addLinkTo(entityTwo, new LinkData(entityTwo, joint));
-
+        link(entityOne, entityTwo);
         entityOne.linkWith(entityTwo);
 
         entityOne = null;
@@ -79,14 +83,18 @@ public class Linker implements IModItem {
     }
 
     public static void clearLinksFor(IPhysicsEntity entity) {
-        if (links.containsKey(entity)) {
-            for (LinkData linkData : links.get(entity)) {
-                if (PhysicsWorld.space != null) PhysicsWorld.space.removeJoint(linkData.joint);
-                linkData.other.getLinkedEntities().remove(entity);
-                ArrayList<LinkData> otherLinkData = links.get(linkData.other);
-                if (otherLinkData != null) otherLinkData.remove(linkData);
+        try {
+            if (links.containsKey(entity)) {
+                for (LinkData linkData : links.get(entity)) {
+                    if (PhysicsWorld.space != null) PhysicsWorld.space.removeJoint(linkData.joint);
+                    linkData.other.getLinkedEntities().removeValue(entity, true);
+                    ArrayList<LinkData> otherLinkData = links.get(linkData.other);
+                    if (otherLinkData != null) otherLinkData.remove(linkData);
+                }
+                links.remove(entity);
             }
-            links.remove(entity);
+        } catch (ConcurrentModificationException e) {
+            Constants.LOGGER.error("Concurrent modification exception while clearing links for entity: " + entity);
         }
     }
 }

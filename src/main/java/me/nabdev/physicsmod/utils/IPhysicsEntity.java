@@ -1,9 +1,8 @@
 package me.nabdev.physicsmod.utils;
 
 import com.badlogic.gdx.math.collision.BoundingBox;
+import com.badlogic.gdx.utils.Array;
 import com.jme3.bullet.objects.PhysicsRigidBody;
-
-import java.util.ArrayList;
 
 public interface IPhysicsEntity {
     PhysicsRigidBody getBody();
@@ -20,9 +19,11 @@ public interface IPhysicsEntity {
     default void linkWith(IPhysicsEntity entity) {
     }
 
-    default ArrayList<IPhysicsEntity> getLinkedEntities() {
-        return new ArrayList<>();
+    default Array<IPhysicsEntity> getLinkedEntities() {
+        return new Array<>();
     }
 
     void kill();
+
+    int getID();
 }
