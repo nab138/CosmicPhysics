@@ -13,11 +13,25 @@ import me.nabdev.physicsmod.Constants;
 import me.nabdev.physicsmod.utils.IPhysicsEntity;
 import me.nabdev.physicsmod.utils.PhysicsWorld;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+
 public class Linker implements IModItem {
+    public static class LinkData {
+        public IPhysicsEntity other;
+        public New6Dof joint;
+
+        public LinkData(IPhysicsEntity other, New6Dof joint) {
+            this.other = other;
+            this.joint = joint;
+        }
+    }
     DataTagManifest tagManifest = new DataTagManifest();
     public static Identifier id = new Identifier(Constants.MOD_ID, "linker");
     public static IPhysicsEntity entityOne = null;
     public static IPhysicsEntity entityTwo = null;
+
+    public static HashMap<IPhysicsEntity, ArrayList<LinkData>> links = new HashMap<>();
 
 
     public Linker() {
@@ -36,6 +50,8 @@ public class Linker implements IModItem {
 
         New6Dof joint = new New6Dof(bodyOne, bodyTwo, diff, Vector3f.ZERO, Matrix3f.IDENTITY, Matrix3f.IDENTITY, RotationOrder.XYZ);
         PhysicsWorld.space.addJoint(joint);
+        addLinkTo(entityOne, new LinkData(entityTwo, joint));
+        addLinkTo(entityTwo, new LinkData(entityTwo, joint));
 
         entityOne.linkWith(entityTwo);
 
@@ -56,5 +72,27 @@ public class Linker implements IModItem {
     @Override
     public DataTagManifest getTagManifest() {
         return tagManifest;
+    }
+
+    public static void addLinkTo(IPhysicsEntity entity, LinkData linkData) {
+        if (links.containsKey(entity)) {
+            links.get(entity).add(linkData);
+        } else {
+            ArrayList<LinkData> list = new ArrayList<>();
+            list.add(linkData);
+            links.put(entity, list);
+        }
+    }
+
+    public static void clearLinksFor(IPhysicsEntity entity) {
+        if (links.containsKey(entity)) {
+            for (LinkData linkData : links.get(entity)) {
+                PhysicsWorld.space.removeJoint(linkData.joint);
+                linkData.other.getLinkedEntities().remove(entity);
+                ArrayList<LinkData> otherLinkData = links.get(linkData.other);
+                otherLinkData.remove(linkData);
+            }
+            links.remove(entity);
+        }
     }
 }
