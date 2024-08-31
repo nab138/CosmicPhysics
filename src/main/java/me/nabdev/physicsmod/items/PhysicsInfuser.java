@@ -15,7 +15,7 @@ import finalforeach.cosmicreach.gamestates.InGame;
 import finalforeach.cosmicreach.items.ItemSlot;
 import finalforeach.cosmicreach.world.Zone;
 import me.nabdev.physicsmod.Constants;
-import me.nabdev.physicsmod.utils.PhysicsWorld;
+import me.nabdev.physicsmod.utils.PhysicsUtils;
 
 public class PhysicsInfuser implements IModItem {
     DataTagManifest tagManifest = new DataTagManifest();
@@ -56,6 +56,6 @@ public class PhysicsInfuser implements IModItem {
 
         Zone z = player.getZone(InGame.world);
         BlockUtil.setBlockAt(z, Block.AIR.getDefaultBlockState(), pos);
-        PhysicsWorld.createBlockAt(new Vector3(pos.getGlobalX(), pos.getGlobalY(), pos.getGlobalZ()).add(0.5f), block, z);
+        PhysicsUtils.createBlockAt(new Vector3(pos.getGlobalX(), pos.getGlobalY(), pos.getGlobalZ()).add(0.5f), block, z);
     }
 }

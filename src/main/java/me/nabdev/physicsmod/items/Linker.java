@@ -87,7 +87,7 @@ public class Linker implements IModItem {
     public static void clearLinksFor(IPhysicsEntity entity) {
         if (links.containsKey(entity)) {
             for (LinkData linkData : links.get(entity)) {
-                PhysicsWorld.space.removeJoint(linkData.joint);
+                if(PhysicsWorld.space != null) PhysicsWorld.space.removeJoint(linkData.joint);
                 linkData.other.getLinkedEntities().remove(entity);
                 ArrayList<LinkData> otherLinkData = links.get(linkData.other);
                 if(otherLinkData != null) otherLinkData.remove(linkData);

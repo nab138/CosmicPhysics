@@ -14,4 +14,5 @@ public interface IPhysicsEntity {
     void setMass(float mass);
     default void linkWith(IPhysicsEntity entity){}
     default ArrayList<IPhysicsEntity> getLinkedEntities(){return new ArrayList<>();}
+    void kill();
 }
