@@ -90,7 +90,7 @@ public class Linker implements IModItem {
                 PhysicsWorld.space.removeJoint(linkData.joint);
                 linkData.other.getLinkedEntities().remove(entity);
                 ArrayList<LinkData> otherLinkData = links.get(linkData.other);
-                otherLinkData.remove(linkData);
+                if(otherLinkData != null) otherLinkData.remove(linkData);
             }
             links.remove(entity);
         }

@@ -256,23 +256,55 @@ public class PhysicsWorld {
                     // Draw the texture 8 times to fill the entire pixmap
                     String key = textures.orderedKeys().first();
                     BlockModelJsonTexture tex = textures.get(key);
-                    Texture blockTex = new Texture(GameAssetLoader.loadAsset("textures/blocks/" + tex.fileName));
-                    TextureData data = blockTex.getTextureData();
-                    data.prepare();
-                    Pixmap blockPixmap = data.consumePixmap();
+
                     for (int i = 0; i < 8; i++) {
+                        Texture blockTex = new Texture(GameAssetLoader.loadAsset("textures/blocks/" + tex.fileName));
+                        Texture correctTex;
+                        if(i < 4){
+                            correctTex = flipY(blockTex);
+                        } else if(i == 4 || i == 6){
+                            correctTex = blockTex;
+                        } else {
+                            correctTex = flipX(blockTex);
+                        }
+
+                        TextureData data = correctTex.getTextureData();
+                        try{
+                            data.prepare();
+                        } catch(Exception ignored){}
+                        Pixmap blockPixmap = data.consumePixmap();
                         pixmap.drawPixmap(blockPixmap, positions[i][0], positions[i][1]);
+                        blockPixmap.dispose();
                     }
-                    blockPixmap.dispose();
                 } else {
                     for (int i = 0; i < order.length; i++) {
                         String key = order[i];
                         if (!key.equals("BLANK") && textures.containsKey(key)) {
                             BlockModelJsonTexture tex = textures.get(key);
                             Texture blockTex = new Texture(GameAssetLoader.loadAsset("textures/blocks/" + tex.fileName));
-                            TextureData data = blockTex.getTextureData();
-                            data.prepare();
+                            Texture correctTex;
+
+                            switch(key){
+                                case "top":
+                                    correctTex = flipY(blockTex);
+                                    break;
+                                case "side":
+                                    if(i == 4 || i == 6){
+                                        correctTex = blockTex;
+                                    } else {
+                                        correctTex = flipX(blockTex);
+                                    }
+                                    break;
+                                default:
+                                    correctTex = blockTex;
+                                    break;
+                            }
+                            TextureData data = correctTex.getTextureData();
+                            try {
+                                data.prepare();
+                            } catch(Exception ignored){}
                             Pixmap blockPixmap = data.consumePixmap();
+
                             pixmap.drawPixmap(blockPixmap, positions[i][0], positions[i][1]);
                             blockPixmap.dispose();
                         }
@@ -290,5 +322,35 @@ public class PhysicsWorld {
         }
 
         return stitchedTexture[0];
+    }
+
+    public static Texture flipY(Texture texture) {
+        TextureData data = texture.getTextureData();
+        data.prepare();
+        Pixmap donorPixmap = data.consumePixmap();
+        Pixmap newPixmap = new Pixmap(donorPixmap.getWidth(), donorPixmap.getHeight(), donorPixmap.getFormat());
+
+        for(int x = 0; x < donorPixmap.getWidth(); ++x) {
+            for(int y = 0; y < donorPixmap.getHeight(); ++y) {
+                newPixmap.drawPixel(x, y, donorPixmap.getPixel(x, donorPixmap.getHeight() - 1 - y));
+            }
+        }
+
+        return new Texture(newPixmap);
+    }
+
+    public static Texture flipX(Texture texture) {
+        TextureData data = texture.getTextureData();
+        data.prepare();
+        Pixmap donorPixmap = data.consumePixmap();
+        Pixmap newPixmap = new Pixmap(donorPixmap.getWidth(), donorPixmap.getHeight(), donorPixmap.getFormat());
+
+        for(int x = 0; x < donorPixmap.getWidth(); ++x) {
+            for(int y = 0; y < donorPixmap.getHeight(); ++y) {
+                newPixmap.drawPixel(x, y, donorPixmap.getPixel(donorPixmap.getWidth() - 1 - x, y));
+            }
+        }
+
+        return new Texture(newPixmap);
     }
 }
