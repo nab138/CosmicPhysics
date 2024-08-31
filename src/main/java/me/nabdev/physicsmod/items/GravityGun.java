@@ -10,8 +10,8 @@ import me.nabdev.physicsmod.Constants;
 import me.nabdev.physicsmod.utils.PhysicsWorld;
 
 public class GravityGun implements IModItem {
-    DataTagManifest tagManifest = new DataTagManifest();
-    public static Identifier id = new Identifier(Constants.MOD_ID, "gravity_gun");
+    final DataTagManifest tagManifest = new DataTagManifest();
+    public static final Identifier id = new Identifier(Constants.MOD_ID, "gravity_gun");
     public static boolean isMag = false;
 
     public GravityGun() {
@@ -24,11 +24,6 @@ public class GravityGun implements IModItem {
             if (isMag) PhysicsWorld.dropMagnet();
             isMag = !isMag;
         }
-//        PerspectiveCamera cam = ((ICameraOwner) GameState.IN_GAME).browserMod$getCamera();
-//        Cube e = (Cube)EntityCreator.get(Cube.id.toString());
-//        e.setPosition(new Vector3(player.getPosition()).add(0, 1.5f,0).add(cam.direction.cpy().scl(2.5f)));
-//        player.getZone(world).addEntity(e);
-//        e.setVelocity(cam.direction.cpy().scl(6));
     }
 
     @Override

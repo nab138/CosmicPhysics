@@ -12,6 +12,7 @@ import finalforeach.cosmicreach.world.Zone;
 import me.nabdev.physicsmod.entities.Cube;
 import me.nabdev.physicsmod.utils.PhysicsWorld;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
 
 @Mixin(PlayerEntity.class)
 public class PlayerEntityMixin extends Entity {
@@ -85,11 +86,7 @@ public class PlayerEntityMixin extends Entity {
 
         targetPosition.y = MathUtils.clamp(targetPosition.y, minPosY, maxPosY);
         this.isOnGround = isOnGround;
-        this.tmpEntityBoundingBox.min.x = this.localBoundingBox.min.x + targetPosition.x;
-        this.tmpEntityBoundingBox.max.x = this.localBoundingBox.max.x + targetPosition.x;
-        this.tmpEntityBoundingBox.min.y = this.localBoundingBox.min.y + targetPosition.y + 0.01F;
-        this.tmpEntityBoundingBox.max.y = this.localBoundingBox.max.y + targetPosition.y;
-        this.tmpEntityBoundingBox.update();
+        physicsMod$updateTmpBoundingBox(targetPosition);
         this.collidedX = false;
         this.collidedZ = false;
         for (Cube cube : PhysicsWorld.cubes) {
@@ -111,25 +108,14 @@ public class PlayerEntityMixin extends Entity {
             }
             if (diff.y > -1.6f - cube.localBoundingBox.getHeight() / 2 && diff.y < 0f) {
                 if (Math.abs(diff.x) > Math.abs(diff.z)) {
-                    if (this.tmpBlockBoundingBox.getCenterX() > targetPosition.x) {
-                        targetPosition.x = this.tmpBlockBoundingBox.min.x - this.tmpEntityBoundingBox.getWidth() / 2.0F - 0.01F;
-                    } else {
-                        targetPosition.x = this.tmpBlockBoundingBox.max.x + this.tmpEntityBoundingBox.getWidth() / 2.0F + 0.01F;
-                    }
-                    this.collidedX = true;
-                    this.onceVelocity.x = 0.0F;
-                    this.velocity.x = 0.0F;
+                    physicsMod$fixPositionX(targetPosition);
                 }
             }
 
         }
 
         targetPosition.y = MathUtils.clamp(targetPosition.y, minPosY, maxPosY);
-        this.tmpEntityBoundingBox.min.x = this.localBoundingBox.min.x + targetPosition.x;
-        this.tmpEntityBoundingBox.max.x = this.localBoundingBox.max.x + targetPosition.x;
-        this.tmpEntityBoundingBox.min.y = this.localBoundingBox.min.y + targetPosition.y + 0.01F;
-        this.tmpEntityBoundingBox.max.y = this.localBoundingBox.max.y + targetPosition.y;
-        this.tmpEntityBoundingBox.update();
+        physicsMod$updateTmpBoundingBox(targetPosition);
         minBz = (int) Math.floor(this.tmpEntityBoundingBox.min.z);
         minBx = (int) Math.floor(this.tmpEntityBoundingBox.min.x);
         minBy = (int) Math.floor(this.tmpEntityBoundingBox.min.y);
@@ -346,14 +332,7 @@ public class PlayerEntityMixin extends Entity {
             }
             if (diff.y > -2.5f * cube.localBoundingBox.getHeight() && diff.y < -0f) {
                 if (Math.abs(diff.x) > Math.abs(diff.z)) {
-                    if (this.tmpBlockBoundingBox.getCenterX() > targetPosition.x) {
-                        targetPosition.x = this.tmpBlockBoundingBox.min.x - this.tmpEntityBoundingBox.getWidth() / 2.0F - 0.01F;
-                    } else {
-                        targetPosition.x = this.tmpBlockBoundingBox.max.x + this.tmpEntityBoundingBox.getWidth() / 2.0F + 0.01F;
-                    }
-                    this.collidedX = true;
-                    this.onceVelocity.x = 0.0F;
-                    this.velocity.x = 0.0F;
+                    physicsMod$fixPositionX(targetPosition);
                 } else {
                     if (cube.position.z > targetPosition.z) {
                         targetPosition.z = this.tmpBlockBoundingBox.min.z - this.tmpEntityBoundingBox.getDepth() / 2.0F - 0.01F;
@@ -372,5 +351,26 @@ public class PlayerEntityMixin extends Entity {
         }
 
         this.position.set(targetPosition.x, targetPosition.y, targetPosition.z);
+    }
+
+    @Unique
+    private void physicsMod$fixPositionX(Vector3 targetPosition) {
+        if (this.tmpBlockBoundingBox.getCenterX() > targetPosition.x) {
+            targetPosition.x = this.tmpBlockBoundingBox.min.x - this.tmpEntityBoundingBox.getWidth() / 2.0F - 0.01F;
+        } else {
+            targetPosition.x = this.tmpBlockBoundingBox.max.x + this.tmpEntityBoundingBox.getWidth() / 2.0F + 0.01F;
+        }
+        this.collidedX = true;
+        this.onceVelocity.x = 0.0F;
+        this.velocity.x = 0.0F;
+    }
+
+    @Unique
+    private void physicsMod$updateTmpBoundingBox(Vector3 targetPosition) {
+        this.tmpEntityBoundingBox.min.x = this.localBoundingBox.min.x + targetPosition.x;
+        this.tmpEntityBoundingBox.max.x = this.localBoundingBox.max.x + targetPosition.x;
+        this.tmpEntityBoundingBox.min.y = this.localBoundingBox.min.y + targetPosition.y + 0.01F;
+        this.tmpEntityBoundingBox.max.y = this.localBoundingBox.max.y + targetPosition.y;
+        this.tmpEntityBoundingBox.update();
     }
 }

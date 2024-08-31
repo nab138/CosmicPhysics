@@ -18,8 +18,8 @@ import me.nabdev.physicsmod.Constants;
 import me.nabdev.physicsmod.utils.PhysicsUtils;
 
 public class PhysicsInfuser implements IModItem {
-    DataTagManifest tagManifest = new DataTagManifest();
-    public static Identifier id = new Identifier(Constants.MOD_ID, "infuser");
+    final DataTagManifest tagManifest = new DataTagManifest();
+    public static final Identifier id = new Identifier(Constants.MOD_ID, "infuser");
 
     public static boolean ignoreNextUse = false;
 

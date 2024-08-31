@@ -37,7 +37,7 @@ import java.util.ArrayList;
 
 public class Cube extends Entity implements IPhysicsEntity {
 
-    public static Identifier id = new Identifier(Constants.MOD_ID, "cube");
+    public static final Identifier id = new Identifier(Constants.MOD_ID, "cube");
 
     private final PhysicsRigidBody body;
     public Quaternion rotation = new Quaternion();
@@ -52,8 +52,8 @@ public class Cube extends Entity implements IPhysicsEntity {
 
     public static Texture ropeTexture;
 
-    BlockPosition tmpBlockPos = new BlockPosition(null, 0, 0, 0);
-    Color tinyTint = Color.WHITE.cpy();
+    final BlockPosition tmpBlockPos = new BlockPosition(null, 0, 0, 0);
+    final Color tinyTint = Color.WHITE.cpy();
 
     public Cube(Vector3f pos, BlockState blockState) {
         super(id.toString());
@@ -83,18 +83,18 @@ public class Cube extends Entity implements IPhysicsEntity {
         this(getSpawnPos(), Block.getInstance("block_cheese").getDefaultBlockState());
     }
 
-    public void read(CRBinDeserializer deserial) {
-        super.read(deserial);
+    public void read(CRBinDeserializer deserialize) {
+        super.read(deserialize);
         this.localBoundingBox.min.set(-0.5F, -0.5F, -0.5F);
         this.localBoundingBox.max.set(0.5F, 0.5F, 0.5F);
         this.localBoundingBox.update();
-        blockState = BlockState.getInstance(deserial.readString("blockID"));
+        blockState = BlockState.getInstance(deserialize.readString("blockID"));
         setTexture(TextureUtils.getTextureForBlock(blockState));
         body.setPhysicsLocation(new Vector3f(position.x, position.y, position.z));
-        float[] rot = deserial.readFloatArray("rotation");
+        float[] rot = deserialize.readFloatArray("rotation");
         rotation = new Quaternion(rot[0], rot[1], rot[2], rot[3]);
         body.setPhysicsRotation(new com.jme3.math.Quaternion(rot[0], rot[1], rot[2], rot[3]));
-        if(deserial.readBoolean("isMagnet", false)) {
+        if(deserialize.readBoolean("isMagnet", false)) {
             PhysicsWorld.magnet(this);
         }
     }
@@ -246,8 +246,8 @@ public class Cube extends Entity implements IPhysicsEntity {
     }
 
     @Override
-    public void setMagneted(boolean magneted) {
-        isMagnet = magneted;
+    public void setMagnetised(boolean magnetised) {
+        isMagnet = magnetised;
     }
 
     @Override
@@ -262,7 +262,6 @@ public class Cube extends Entity implements IPhysicsEntity {
         if(zone != null) super.onDeath(zone);
     }
 
-    @Override
     public void setMass(float mass) {
         if(mass == this.mass || mass < 0) return;
         this.mass = mass;

@@ -17,21 +17,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 public class Linker implements IModItem {
-    public static class LinkData {
-        public IPhysicsEntity other;
-        public New6Dof joint;
-
-        public LinkData(IPhysicsEntity other, New6Dof joint) {
-            this.other = other;
-            this.joint = joint;
-        }
-    }
-    DataTagManifest tagManifest = new DataTagManifest();
-    public static Identifier id = new Identifier(Constants.MOD_ID, "linker");
+    public record LinkData(IPhysicsEntity other, New6Dof joint) {}
+    final DataTagManifest tagManifest = new DataTagManifest();
+    public static final Identifier id = new Identifier(Constants.MOD_ID, "linker");
     public static IPhysicsEntity entityOne = null;
     public static IPhysicsEntity entityTwo = null;
 
-    public static HashMap<IPhysicsEntity, ArrayList<LinkData>> links = new HashMap<>();
+    public static final HashMap<IPhysicsEntity, ArrayList<LinkData>> links = new HashMap<>();
 
 
     public Linker() {

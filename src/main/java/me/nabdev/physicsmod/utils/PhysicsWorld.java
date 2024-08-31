@@ -31,8 +31,8 @@ public class PhysicsWorld {
             this.isValid = false;
         }
     }
-    public static ArrayList<IPhysicsEntity> allObjects = new ArrayList<>();
-    public static ArrayList<Cube> cubes = new ArrayList<>();
+    public static final ArrayList<IPhysicsEntity> allObjects = new ArrayList<>();
+    public static final ArrayList<Cube> cubes = new ArrayList<>();
     public static PhysicsSpace space;
     public static final HashMap<Integer, String> blocks = new HashMap<>();
     public static final HashMap<Integer, PhysicsRigidBody> blockBodies = new HashMap<>();
@@ -40,12 +40,11 @@ public class PhysicsWorld {
     private static final ArrayList<PhysicsRigidBody> queuedBodies = new ArrayList<>();
     public static IPhysicsEntity magnetEntity = null;
 
-    public static boolean isMagneting = false;
     public static boolean isRunning = false;
 
     public static boolean readyToInitialize = false;
 
-    public static ArrayList<IPhysicsEntity[]> queuedLinks = new ArrayList<>();
+    public static final ArrayList<IPhysicsEntity[]> queuedLinks = new ArrayList<>();
 
     public static void initialize(){
         readyToInitialize = true;
@@ -83,7 +82,6 @@ public class PhysicsWorld {
     public static void removeEntity(IPhysicsEntity entity){
         allObjects.remove(entity);
         if(space != null){
-            System.out.println("Removing entity from physics world");
             space.removeCollisionObject(entity.getBody());
         }
     }
@@ -100,16 +98,15 @@ public class PhysicsWorld {
 
     public static void dropMagnet() {
         if(magnetEntity != null) {
-            magnetEntity.setMagneted(false);
+            magnetEntity.setMagnetised(false);
             magnetEntity = null;
         }
     }
 
     public static void magnet(IPhysicsEntity entity) {
         dropMagnet();
-        isMagneting = true;
         magnetEntity = entity;
-        magnetEntity.setMagneted(true);
+        magnetEntity.setMagnetised(true);
     }
 
     public static void reset() {
@@ -127,7 +124,7 @@ public class PhysicsWorld {
         isRunning = false;
 
         if(magnetEntity != null) {
-            magnetEntity.setMagneted(false);
+            magnetEntity.setMagnetised(false);
             magnetEntity = null;
         }
     }

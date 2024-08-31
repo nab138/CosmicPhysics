@@ -9,6 +9,7 @@ import com.github.puzzle.game.engine.blocks.models.PuzzleBlockModel;
 import finalforeach.cosmicreach.GameAssetLoader;
 import finalforeach.cosmicreach.blocks.BlockState;
 import finalforeach.cosmicreach.rendering.blockmodels.BlockModelJsonTexture;
+import me.nabdev.physicsmod.Constants;
 
 import java.util.HashMap;
 
@@ -27,7 +28,7 @@ public class TextureUtils {
             }
             return stitchedTexture;
         } else {
-            System.out.println("Block model is not PuzzleBlockModel, it is: " + state.getModel().getClass());
+            Constants.LOGGER.warn("Block model is not PuzzleBlockModel, it is: {}", state.getModel().getClass());
         }
         return null;
     }

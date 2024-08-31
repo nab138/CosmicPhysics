@@ -9,9 +9,8 @@ public interface IPhysicsEntity {
     PhysicsRigidBody getBody();
     BoundingBox getBoundingBox();
     default void solidify(){}
-    void setMagneted(boolean magneted);
+    void setMagnetised(boolean magnetised);
     void forceActivate();
-    void setMass(float mass);
     default void linkWith(IPhysicsEntity entity){}
     default ArrayList<IPhysicsEntity> getLinkedEntities(){return new ArrayList<>();}
     void kill();

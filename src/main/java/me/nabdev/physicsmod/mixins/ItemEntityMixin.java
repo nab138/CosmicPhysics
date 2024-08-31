@@ -148,13 +148,7 @@ public abstract class ItemEntityMixin extends Entity implements IPhysicsEntity {
 
     @SuppressWarnings("all")
     @Override
-    public void setMass(float mass) {
-        physicsMod$body.setMass(mass);
-    }
-
-    @SuppressWarnings("all")
-    @Override
-    public void setMagneted(boolean magnet) {
+    public void setMagnetised(boolean magnet) {
         physicsMod$isMagnet = magnet;
     }
 

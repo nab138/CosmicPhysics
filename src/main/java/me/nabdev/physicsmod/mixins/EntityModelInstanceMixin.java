@@ -30,6 +30,7 @@ public abstract class EntityModelInstanceMixin implements IPhysicsModelInstance 
         }
     }
 
+    @SuppressWarnings("SpellCheckingInspection")
     @Redirect(method = "render", at = @At(value = "INVOKE", target = "Lcom/badlogic/gdx/graphics/Mesh;render(Lcom/badlogic/gdx/graphics/glutils/ShaderProgram;I)V"))
     private void render(Mesh instance, ShaderProgram shader, int primitiveType) {
         physicsMod$setTintColor(shader, physicsMod$tint);
