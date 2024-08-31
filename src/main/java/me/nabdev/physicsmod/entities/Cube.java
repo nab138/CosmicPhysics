@@ -280,6 +280,7 @@ public class Cube extends Entity implements IPhysicsEntity {
 
     @Override
     public void onDeath(Zone zone) {
+        Linker.clearLinksFor(this);
         PhysicsWorld.removeCube(this);
         if(zone != null) super.onDeath(zone);
     }
@@ -297,8 +298,14 @@ public class Cube extends Entity implements IPhysicsEntity {
     }
 
     @Override
+    public ArrayList<IPhysicsEntity> getLinkedEntities() {
+        return linkedEntities;
+    }
+
+    @Override
     public void solidify() {
         if(currentZone == null) return;
+
         BlockUtil.setBlockAt(currentZone, blockState, new Vector3((float)Math.floor(position.x), (float)Math.floor(position.y), (float)Math.floor(position.z)));
         this.onDeath(currentZone);
     }
