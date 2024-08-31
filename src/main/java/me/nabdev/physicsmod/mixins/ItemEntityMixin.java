@@ -28,7 +28,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(ItemEntity.class)
-public class ItemEntityMixin extends Entity implements IPhysicsEntity {
+public abstract class ItemEntityMixin extends Entity implements IPhysicsEntity {
 
     @Unique
     private PhysicsRigidBody body;
@@ -45,13 +45,19 @@ public class ItemEntityMixin extends Entity implements IPhysicsEntity {
     @Shadow
     float renderSize;
 
+    @Shadow protected abstract void die(Zone zone);
+
     @Inject(method = "die", at = @At("HEAD"))
-    public void die(CallbackInfo ci) {
+    public void dieMixin(CallbackInfo ci) {
         if(body != null) PhysicsWorld.removeEntity(this);
     }
 
     @Inject(method="update", at=@At("TAIL"))
     public void update(Zone zone, double deltaTime, CallbackInfo ci) {
+        if (!PhysicsWorld.isRunning) {
+            die(zone);
+            return;
+        }
         hasGravity = false;
         if(body == null){
             BoxCollisionShape boxShape = new BoxCollisionShape(new Vector3f(0.5f, 0.5f, 0.5f).mult(renderSize));
