@@ -1,6 +1,7 @@
 package me.nabdev.physicsmod.entities;
 
 import com.badlogic.gdx.graphics.Camera;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.math.Quaternion;
@@ -15,6 +16,7 @@ import com.jme3.math.Vector3f;
 import finalforeach.cosmicreach.GameSingletons;
 import finalforeach.cosmicreach.Threads;
 import finalforeach.cosmicreach.blocks.Block;
+import finalforeach.cosmicreach.blocks.BlockPosition;
 import finalforeach.cosmicreach.blocks.BlockState;
 import finalforeach.cosmicreach.entities.Entity;
 import finalforeach.cosmicreach.entities.player.Player;
@@ -24,6 +26,8 @@ import finalforeach.cosmicreach.io.CRBinDeserializer;
 import finalforeach.cosmicreach.io.CRBinSerializer;
 import finalforeach.cosmicreach.items.ItemStack;
 import finalforeach.cosmicreach.rendering.entities.EntityModel;
+import finalforeach.cosmicreach.rendering.items.ItemModel;
+import finalforeach.cosmicreach.world.Sky;
 import finalforeach.cosmicreach.world.Zone;
 import me.nabdev.physicsmod.Constants;
 import me.nabdev.physicsmod.items.GravityGun;
@@ -51,6 +55,9 @@ public class Cube extends Entity implements IPhysicsEntity {
     private final ArrayList<IPhysicsEntity> linkedEntities = new ArrayList<>();
 
     public static Texture ropeTexture;
+
+    BlockPosition tmpBlockPos = new BlockPosition(null, 0, 0, 0);
+    Color tinyTint = Color.WHITE.cpy();
 
     public Cube(Vector3f pos, BlockState blockState) {
         super(id.toString());
@@ -162,7 +169,13 @@ public class Cube extends Entity implements IPhysicsEntity {
             tmpModelMatrix.translate(tmpRenderPos);
             tmpModelMatrix.rotate(rotation);
 
-            this.renderModelAfterMatrixSet(camera);
+            try {
+                Entity.setLightingColor(currentZone, position, Sky.currentSky.currentAmbientColor, tinyTint, tmpBlockPos, tmpBlockPos);
+            } catch (Exception ignore) {
+                tinyTint.set(Color.WHITE.cpy());
+            }
+            ((PhysicsModelInstance) modelInstance).tintSet(tinyTint);
+            this.modelInstance.render(this, camera, tmpModelMatrix);
         }
 
         if(!PhysicsWorld.queuedLinks.isEmpty()) return;

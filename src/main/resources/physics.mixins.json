@@ -6,6 +6,7 @@
   "mixins": [
     "BatchedZoneRendererMixin",
     "DroneEntityMixin",
+    "EntityModelInstanceMixin",
     "InGameMixin",
     "ItemEntityMixin",
     "PlayerEntityMixin"
