@@ -22,8 +22,6 @@ public abstract class EntityModelInstanceMixin implements PhysicsModelInstance {
         this.physicsMod$tint = color;
     }
 
-    @Shadow public abstract IEntityModel getModel();
-
     private float[] tmpVec4 = new float[4];
 
     @Unique

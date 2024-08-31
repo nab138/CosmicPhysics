@@ -174,7 +174,10 @@ public class Cube extends Entity implements IPhysicsEntity {
             } catch (Exception ignore) {
                 tinyTint.set(Color.WHITE.cpy());
             }
-            ((PhysicsModelInstance) modelInstance).tintSet(tinyTint);
+//            if (tinyTint.r == 0 && tinyTint.g == 0 && tinyTint.b == 0)
+//                ((PhysicsModelInstance) modelInstance).tintSet(tinyTint);
+//            else
+                ((PhysicsModelInstance) modelInstance).tintSet(tinyTint.add(0.2f, 0.2f, 0.2f, 0));
             this.modelInstance.render(this, camera, tmpModelMatrix);
         }
 
