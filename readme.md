@@ -1,6 +1,6 @@
 # Cosmic Physics
 
-Real physics in CR! Buggy, but not too bad.
+Real physics in CR! Buggy, but not too bad. Uses Puzzle loader.
 
 ## Usage: 
 - Infuser: Right click to turn blocks into physics objects or vise versa
