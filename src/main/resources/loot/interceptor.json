@@ -1,0 +1,98 @@
+{
+  "id": "base:loot_interceptor",
+  "options": [
+    [
+      {
+        "id": "base:hazard[default]",
+        "max": 3
+      }
+    ],
+    [
+      {
+        "id": "base:snow[default]",
+        "max": 3
+      }
+    ],
+    [
+      {
+        "id": "base:lunar_soil[default]",
+        "max": 3
+      }
+    ],
+    [
+      {
+        "id": "base:aluminium_panel[default]",
+        "max": 3
+      }
+    ],
+    [
+      {
+        "id": "base:asphalt[default]",
+        "max": 3
+      }
+    ],
+    [
+      {
+        "id": "base:c4[default]",
+        "max": 3
+      }
+    ],
+    [
+      {
+        "id": "base:cheese[default]",
+        "max": 3
+      }
+    ],
+    [
+      {
+        "id": "base:metal_panel[default]",
+        "max": 3
+      }
+    ],
+    [
+      {
+        "id": "base:stone_gabbro[default]",
+        "max": 3
+      }
+    ],
+    [
+      {
+        "id": "base:stone_gravel[default]",
+        "max": 3
+      }
+    ],
+    [
+      {
+        "id": "base:stone_limestone[default]",
+        "max": 3
+      }
+    ],
+    {
+      "weight": 4,
+      "stacks": [
+        {
+          "id": "base:medkit",
+          "max": 1
+        }
+      ]
+    },
+    {
+      "weight": 0.1,
+      "stacks": [
+        {
+          "id": "base:ingot_gold",
+          "max": 1
+        }
+      ]
+    },
+    {
+      "weight": 2,
+      "stacks": [
+        {
+          "id": "physics:mystical_gem",
+          "max": 1
+        }
+      ]
+    }
+  ]
+}

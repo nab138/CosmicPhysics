@@ -9,7 +9,8 @@
     "EntityModelInstanceMixin",
     "InGameMixin",
     "ItemEntityMixin",
-    "PlayerEntityMixin"
+    "PlayerEntityMixin",
+    "PlayerMixin"
   ],
   "client": [],
   "server": [],

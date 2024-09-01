@@ -36,6 +36,15 @@ public class PhysicsUtils {
         body.activate(true);
     }
 
+    public static Vector3 getCameraDir() {
+        PerspectiveCamera cam = ((ICameraOwner) GameState.IN_GAME).browserMod$getCamera();
+        return cam.direction.cpy();
+    }
+
+    public static Vector3f v3ToV3f(Vector3 v) {
+        return new Vector3f(v.x, v.y, v.z);
+    }
+
     public static void createBlockAt(Vector3 pos, BlockState state, Zone zone) {
         PhysicsWorld.initialize();
         if (isEmpty(state)) return;

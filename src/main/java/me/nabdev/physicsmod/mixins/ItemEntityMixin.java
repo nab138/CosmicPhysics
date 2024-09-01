@@ -17,10 +17,7 @@ import finalforeach.cosmicreach.gamestates.GameState;
 import finalforeach.cosmicreach.items.ItemStack;
 import finalforeach.cosmicreach.world.Zone;
 import me.nabdev.physicsmod.items.GravityGun;
-import me.nabdev.physicsmod.utils.ICameraOwner;
-import me.nabdev.physicsmod.utils.IPhysicsEntity;
-import me.nabdev.physicsmod.utils.PhysicsUtils;
-import me.nabdev.physicsmod.utils.PhysicsWorld;
+import me.nabdev.physicsmod.utils.*;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -29,13 +26,16 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(ItemEntity.class)
-public abstract class ItemEntityMixin extends Entity implements IPhysicsEntity {
+public abstract class ItemEntityMixin extends Entity implements IPhysicsEntity, IPhysicsItem {
 
     @Unique
     private PhysicsRigidBody physicsMod$body;
 
     @Unique
     public Quaternion physicsMod$rotation = new Quaternion();
+
+    @Unique
+    public boolean physicsMod$playerDropped = false;
 
 
     @Unique
@@ -59,6 +59,7 @@ public abstract class ItemEntityMixin extends Entity implements IPhysicsEntity {
         if (physicsMod$body != null) PhysicsWorld.removeEntity(this);
     }
 
+
     @Inject(method = "update", at = @At("TAIL"))
     public void update(Zone zone, double deltaTime, CallbackInfo ci) {
         physicsMod$currentZone = zone;
@@ -75,6 +76,9 @@ public abstract class ItemEntityMixin extends Entity implements IPhysicsEntity {
             physicsMod$body.setFriction(1f);
 
             PhysicsWorld.addEntity(this);
+
+            if (physicsMod$playerDropped)
+                physicsMod$body.setLinearVelocity(PhysicsUtils.v3ToV3f(PhysicsUtils.getCameraDir().scl(5f)));
         }
         if (physicsMod$isMagnet) PhysicsUtils.applyMagnetForce(position, physicsMod$body);
 
@@ -170,5 +174,10 @@ public abstract class ItemEntityMixin extends Entity implements IPhysicsEntity {
     @Override
     public int getID() {
         return -1;
+    }
+
+    @Override
+    public void physicsMod$setPlayerDropped() {
+        physicsMod$playerDropped = true;
     }
 }

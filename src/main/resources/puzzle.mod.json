@@ -10,14 +10,17 @@
     "preInit": [],
     "init": [
       "me.nabdev.physicsmod.PhysicsMod"
+    ],
+    "postInit": [
+      "me.nabdev.physicsmod.PhysicsPostInitializer"
     ]
   },
   "mixins": [
     "physics.mixins.json"
   ],
   "dependencies": {
-    "cosmic-reach": ">=0.1.50",
-    "puzzle-loader": ">=1.4.3"
+    "cosmic-reach": ">=0.2.0",
+    "puzzle-loader": ">=1.5.0"
   },
   "accessManipulator": "physics_mod.manipulator",
   "meta": {

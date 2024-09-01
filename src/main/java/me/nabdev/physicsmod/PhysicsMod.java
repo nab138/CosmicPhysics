@@ -6,14 +6,17 @@ import com.github.puzzle.game.items.IModItem;
 import com.github.puzzle.loader.entrypoint.interfaces.ModInitializer;
 import com.jme3.bullet.objects.PhysicsRigidBody;
 import finalforeach.cosmicreach.entities.EntityCreator;
+import finalforeach.cosmicreach.items.Item;
 import me.nabdev.physicsmod.commands.Commands;
 import me.nabdev.physicsmod.entities.Cube;
 import me.nabdev.physicsmod.items.GravityGun;
 import me.nabdev.physicsmod.items.Linker;
+import me.nabdev.physicsmod.items.MysticalGem;
 import me.nabdev.physicsmod.items.PhysicsInfuser;
 import me.nabdev.physicsmod.utils.NativeLibraryLoader;
 import org.greenrobot.eventbus.Subscribe;
 
+import java.util.function.Predicate;
 import java.util.logging.Level;
 
 @SuppressWarnings("unused")
@@ -22,8 +25,9 @@ public class PhysicsMod implements ModInitializer {
     public void onInit() {
         PuzzleRegistries.EVENT_BUS.register(this);
         EntityCreator.registerEntityCreator(Cube.id.toString(), Cube::new);
-        IModItem.registerItem(new GravityGun());
+        IModItem.registerItem(new MysticalGem());
         IModItem.registerItem(new PhysicsInfuser());
+        IModItem.registerItem(new GravityGun());
         IModItem.registerItem(new Linker());
 
         Commands.register();
@@ -37,5 +41,13 @@ public class PhysicsMod implements ModInitializer {
 
     @Subscribe
     public void onEvent(OnPreLoadAssetsEvent event) {
+    }
+
+    public static Predicate<Item> itemPredicate(String id) {
+        return item -> {
+            if (item == null) return false;
+            System.out.println(item.getID());
+            return item.getID().equals(id);
+        };
     }
 }
