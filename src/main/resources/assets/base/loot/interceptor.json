@@ -16,7 +16,7 @@
       "stacks":[{ "id": "base:ingot_gold", "max": 1 }]
     },
     {
-      "weight": 10,
+      "weight": 0.5,
       "stacks": [
         {
           "id": "physics:mystical_gem",
