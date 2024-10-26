@@ -1,6 +1,6 @@
 {
   "animations": {
-    "animation.screen.idle": {
+    "animation.cube.idle": {
       "loop": true,
       "animation_length": 16,
       "bones": {}

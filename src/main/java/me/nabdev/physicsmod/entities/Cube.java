@@ -8,7 +8,6 @@ import com.badlogic.gdx.math.Quaternion;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.BoundingBox;
 import com.badlogic.gdx.utils.Array;
-import com.github.puzzle.core.Identifier;
 import com.github.puzzle.game.util.BlockUtil;
 import com.jme3.bullet.collision.shapes.BoxCollisionShape;
 import com.jme3.bullet.objects.PhysicsRigidBody;
@@ -26,6 +25,7 @@ import finalforeach.cosmicreach.io.CRBinDeserializer;
 import finalforeach.cosmicreach.io.CRBinSerializer;
 import finalforeach.cosmicreach.items.ItemStack;
 import finalforeach.cosmicreach.rendering.entities.EntityModel;
+import finalforeach.cosmicreach.util.Identifier;
 import finalforeach.cosmicreach.world.Sky;
 import finalforeach.cosmicreach.world.Zone;
 import me.nabdev.physicsmod.Constants;
@@ -37,7 +37,7 @@ import me.nabdev.physicsmod.utils.*;
 import java.util.Random;
 
 public class Cube extends Entity implements IPhysicsEntity {
-    public static final Identifier id = new Identifier(Constants.MOD_ID, "cube");
+    public static final Identifier id = Identifier.of(Constants.MOD_ID,"cube");
 
     private final PhysicsRigidBody body;
     public Quaternion rotation = new Quaternion();
@@ -58,12 +58,14 @@ public class Cube extends Entity implements IPhysicsEntity {
     public int physicsID = -1;
     public static Random random = new Random();
 
+    private Vector3f scale = new Vector3f(1, 1, 1);
+
     public Cube(Vector3f pos, BlockState blockState) {
         super(id.toString());
 
         Threads.runOnMainThread(
                 () -> this.modelInstance = GameSingletons.entityModelLoader
-                        .load(this, "model_cube.json", "cube.animation.json", "animation.screen.idle", "cheese.png").getNewModelInstance()
+                        .load(this, "model_cube.json", "cube.animation.json", "animation.cube.idle", "cheese.png").getNewModelInstance()
         );
         this.hasGravity = false;
         this.blockState = blockState;
@@ -78,7 +80,7 @@ public class Cube extends Entity implements IPhysicsEntity {
         PhysicsWorld.addCube(this);
 
         if (ropeTexture == null) {
-            ropeTexture = TextureUtils.getTextureForBlock(Block.getInstance("block_metal_panel").getDefaultBlockState());
+            ropeTexture = TextureUtils.getTextureForBlock(Block.getInstance("metal_panel").getDefaultBlockState());
         }
 
         // Get random physics ID between min integer value and max integer value
@@ -86,7 +88,7 @@ public class Cube extends Entity implements IPhysicsEntity {
     }
 
     public Cube() {
-        this(getSpawnPos(), Block.getInstance("block_cheese").getDefaultBlockState());
+        this(getSpawnPos(), Block.getInstance("cheese").getDefaultBlockState());
     }
 
     public void read(CRBinDeserializer deserialize) {
@@ -160,6 +162,7 @@ public class Cube extends Entity implements IPhysicsEntity {
             tmpModelMatrix.idt();
             tmpModelMatrix.translate(tmpRenderPos);
             tmpModelMatrix.rotate(rotation);
+            tmpModelMatrix.scale(scale.x, scale.y, scale.z);
 
             try {
                 Entity.setLightingColor(currentZone, position, Sky.currentSky.currentAmbientColor, tinyTint, tmpBlockPos, tmpBlockPos);
@@ -324,5 +327,11 @@ public class Cube extends Entity implements IPhysicsEntity {
     @Override
     public int getID() {
         return physicsID;
+    }
+
+    @SuppressWarnings("unused")
+    public void scale(Vector3f scale){
+        body.setPhysicsScale(scale);
+        this.scale = scale;
     }
 }

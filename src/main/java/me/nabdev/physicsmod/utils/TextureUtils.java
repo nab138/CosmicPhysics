@@ -54,7 +54,7 @@ public class TextureUtils {
                 BlockModelJsonTexture tex = textures.get(key);
 
                 for (int i = 0; i < 8; i++) {
-                    Texture blockTex = new Texture(GameAssetLoader.loadAsset("textures/blocks/" + tex.fileName));
+                    Texture blockTex = new Texture(GameAssetLoader.loadAsset("textures/blocks/" + tex.fileName.split("/")[2]));
                     Texture correctTex;
                     if (i < 4) {
                         correctTex = flipY(blockTex);

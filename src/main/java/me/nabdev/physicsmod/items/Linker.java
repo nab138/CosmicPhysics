@@ -1,7 +1,5 @@
 package me.nabdev.physicsmod.items;
 
-import com.github.puzzle.core.Identifier;
-import com.github.puzzle.core.resources.ResourceLocation;
 import com.github.puzzle.game.items.IModItem;
 import com.github.puzzle.game.items.data.DataTagManifest;
 import com.jme3.bullet.RotationOrder;
@@ -9,6 +7,7 @@ import com.jme3.bullet.joints.New6Dof;
 import com.jme3.bullet.objects.PhysicsRigidBody;
 import com.jme3.math.Matrix3f;
 import com.jme3.math.Vector3f;
+import finalforeach.cosmicreach.util.Identifier;
 import me.nabdev.physicsmod.Constants;
 import me.nabdev.physicsmod.utils.IPhysicsEntity;
 import me.nabdev.physicsmod.utils.PhysicsWorld;
@@ -22,7 +21,7 @@ public class Linker implements IModItem {
     }
 
     final DataTagManifest tagManifest = new DataTagManifest();
-    public static final Identifier id = new Identifier(Constants.MOD_ID, "linker");
+    public static final Identifier id = Identifier.of(Constants.MOD_ID, "linker");
     public static IPhysicsEntity entityOne = null;
     public static IPhysicsEntity entityTwo = null;
 
@@ -30,7 +29,7 @@ public class Linker implements IModItem {
 
 
     public Linker() {
-        addTexture(IModItem.MODEL_2_5D_ITEM, new ResourceLocation(Constants.MOD_ID, "textures/items/linker.png"));
+        addTexture(IModItem.MODEL_2_5D_ITEM, Identifier.of(Constants.MOD_ID, "linker.png"));
     }
 
     public static void link(IPhysicsEntity eOne, IPhysicsEntity eTwo) {
@@ -96,5 +95,10 @@ public class Linker implements IModItem {
         } catch (ConcurrentModificationException e) {
             Constants.LOGGER.error("Concurrent modification exception while clearing links for entity: " + entity);
         }
+    }
+
+    @Override
+    public String getName() {
+        return "Linker";
     }
 }
