@@ -5,14 +5,12 @@
   "compatibilityLevel": "JAVA_17",
   "client": [
     "BatchedZoneRendererMixin",
-    "DroneEntityMixin",
     "EntityModelInstanceMixin",
     "ExperimentalItemModelMixin",
     "InGameMixin",
     "ItemEntityMixin",
     "PlayerEntityMixin",
-    "PlayerMixin",
-    "GameSoundMixin"
+    "PlayerMixin"
   ],
   "injectors": {
     "defaultRequire": 1
