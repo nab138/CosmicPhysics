@@ -12,12 +12,12 @@ import finalforeach.cosmicreach.world.Zone;
 import me.nabdev.physicsmod.entities.Cube;
 import me.nabdev.physicsmod.utils.PhysicsWorld;
 
-import static finalforeach.cosmicreach.gamestates.InGame.world;
+import static finalforeach.cosmicreach.GameSingletons.world;
 
 public class Commands {
 
     public static void register() {
-        LiteralArgumentBuilder<PuzzleCommandSource> cmd = CommandManager.literal("physics");
+        LiteralArgumentBuilder<PuzzleCommandSource> cmd = CommandManager.literal("assets/physics");
         cmd.then(CommandManager.argument("action", StringArgumentType.word())
                 .executes(context -> {
                     String action = StringArgumentType.getString(context, "action");
@@ -28,12 +28,12 @@ public class Commands {
                         Entity e = EntityCreator.get(Cube.id.toString());
                         e.setPosition(InGame.getLocalPlayer().getPosition());
 
-                        Zone zone = InGame.getLocalPlayer().getZone(world);
+                        Zone zone = InGame.getLocalPlayer().getZone();
                         zone.addEntity(e);
-                        Chat.MAIN_CHAT.sendMessage(world, null, null, "Spawned Cube");
+                        Chat.MAIN_CHAT.addMessage(world, null, null, "Spawned Cube");
                         return 0;
                     }
-                    Chat.MAIN_CHAT.sendMessage(world, null, null, "Unknown action!");
+                    Chat.MAIN_CHAT.addMessage(world, null, null, "Unknown action!");
                     return 1;
                 })
         );

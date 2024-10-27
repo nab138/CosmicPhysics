@@ -1,4 +1,4 @@
-buildscript {
+pluginManagement {
     repositories {
         maven {
             name "JitPack"
@@ -7,11 +7,30 @@ buildscript {
         mavenCentral()
         gradlePluginPortal()
     }
+}
+
+buildscript {
+    repositories {
+        maven {
+            name "JitPack"
+            url "https://jitpack.io"
+        }
+        maven {
+            name = 'Fabric'
+            url = 'https://maven.fabricmc.net/'
+        }
+        mavenCentral()
+        gradlePluginPortal()
+        mavenLocal()
+    }
     dependencies {
         classpath "com.github.johnrengelman:shadow:8.1.1"
-        classpath "com.github.PuzzleLoader:CRPuzzleGradle:$puzzle_gradle_version"
+        classpath "com.github.PuzzleLoader:jigsaw:$jigsaw_gradle_version"
     }
 }
 
-rootProject.name = 'PhysicsMod'
+plugins {
+    id 'org.gradle.toolchains.foojay-resolver-convention' version '0.8.0'
+}
 
+rootProject.name = 'CosmicPhysics'

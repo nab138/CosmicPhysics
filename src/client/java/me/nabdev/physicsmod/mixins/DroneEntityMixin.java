@@ -2,7 +2,7 @@ package me.nabdev.physicsmod.mixins;
 
 import com.badlogic.gdx.math.collision.BoundingBox;
 import com.badlogic.gdx.utils.Array;
-import com.github.puzzle.game.util.Reflection;
+import com.github.puzzle.core.loader.util.Reflection;
 import de.pottgames.tuningfork.SoundBuffer;
 import finalforeach.cosmicreach.GameAssetLoader;
 import finalforeach.cosmicreach.Threads;
@@ -27,6 +27,10 @@ public class DroneEntityMixin extends Entity {
 
     @Shadow
     static Array<SoundBuffer> hurts;
+
+    public DroneEntityMixin(String entityTypeId) {
+        super(entityTypeId);
+    }
 
     @Inject(method = "update", at = @At("TAIL"))
     private void update(CallbackInfo ci) {

@@ -21,10 +21,10 @@ import finalforeach.cosmicreach.blocks.BlockState;
 import finalforeach.cosmicreach.entities.Entity;
 import finalforeach.cosmicreach.entities.player.Player;
 import finalforeach.cosmicreach.gamestates.GameState;
-import finalforeach.cosmicreach.io.CRBinDeserializer;
-import finalforeach.cosmicreach.io.CRBinSerializer;
 import finalforeach.cosmicreach.items.ItemStack;
 import finalforeach.cosmicreach.rendering.entities.EntityModel;
+import finalforeach.cosmicreach.savelib.crbin.CRBinDeserializer;
+import finalforeach.cosmicreach.savelib.crbin.CRBinSerializer;
 import finalforeach.cosmicreach.util.Identifier;
 import finalforeach.cosmicreach.world.Sky;
 import finalforeach.cosmicreach.world.Zone;
@@ -217,7 +217,7 @@ public class Cube extends Entity implements IPhysicsEntity {
     }
 
     @Override
-    public void onUseInteraction(Zone zone, Player player, ItemStack heldItemStack) {
+    public void onUseInteraction(Player player, ItemStack heldItemStack) {
         if (heldItemStack == null) return;
         if (heldItemStack.getItem().getID().equals(GravityGun.id.toString())) {
             if (isMagnet) return;
@@ -273,10 +273,10 @@ public class Cube extends Entity implements IPhysicsEntity {
     }
 
     @Override
-    public void onDeath(Zone zone) {
+    public void onDeath() {
         Linker.clearLinksFor(this);
         PhysicsWorld.removeCube(this);
-        if (zone != null) super.onDeath(zone);
+        if (zone != null) super.onDeath();
     }
 
     public void setMass(float mass) {
@@ -300,7 +300,7 @@ public class Cube extends Entity implements IPhysicsEntity {
         if (currentZone == null) return;
 
         BlockUtil.setBlockAt(currentZone, blockState, new Vector3((float) Math.floor(position.x), (float) Math.floor(position.y), (float) Math.floor(position.z)));
-        this.onDeath(currentZone);
+        this.onDeath();
     }
 
     public void setTexture(Texture tex) {
@@ -321,7 +321,7 @@ public class Cube extends Entity implements IPhysicsEntity {
 
     @Override
     public void kill() {
-        this.onDeath(currentZone);
+        this.onDeath();
     }
 
     @Override

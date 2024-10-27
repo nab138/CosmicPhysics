@@ -16,6 +16,10 @@ import org.spongepowered.asm.mixin.Unique;
 
 @Mixin(PlayerEntity.class)
 public class PlayerEntityMixin extends Entity {
+    public PlayerEntityMixin(String entityTypeId) {
+        super(entityTypeId);
+    }
+
     @Override
     public void update(Zone zone, double delta) {
         PhysicsWorld.tick(delta);

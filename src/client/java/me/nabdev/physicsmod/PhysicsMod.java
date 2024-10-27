@@ -1,9 +1,9 @@
 package me.nabdev.physicsmod;
 
-import com.github.puzzle.core.PuzzleRegistries;
+import com.github.puzzle.core.loader.launch.provider.mod.entrypoint.impls.ClientModInitializer;
+import com.github.puzzle.game.PuzzleRegistries;
 import com.github.puzzle.game.events.OnPreLoadAssetsEvent;
 import com.github.puzzle.game.items.IModItem;
-import com.github.puzzle.loader.entrypoint.interfaces.ModInitializer;
 import com.jme3.bullet.objects.PhysicsRigidBody;
 import finalforeach.cosmicreach.entities.EntityCreator;
 import finalforeach.cosmicreach.items.Item;
@@ -20,7 +20,7 @@ import java.util.function.Predicate;
 import java.util.logging.Level;
 
 @SuppressWarnings("unused")
-public class PhysicsMod implements ModInitializer {
+public class PhysicsMod implements ClientModInitializer {
     @Override
     public void onInit() {
         PuzzleRegistries.EVENT_BUS.register(this);

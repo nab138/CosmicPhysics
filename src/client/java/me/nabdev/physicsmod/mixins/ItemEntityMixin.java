@@ -27,7 +27,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(ItemEntity.class)
 public abstract class ItemEntityMixin extends Entity implements IPhysicsEntity, IPhysicsItem {
-
     @Unique
     private PhysicsRigidBody physicsMod$body;
 
@@ -47,6 +46,10 @@ public abstract class ItemEntityMixin extends Entity implements IPhysicsEntity, 
     @Shadow
     float renderSize;
 
+    public ItemEntityMixin(String entityTypeId) {
+        super(entityTypeId);
+    }
+
     @Shadow
     protected abstract void die(Zone zone);
 
@@ -54,8 +57,8 @@ public abstract class ItemEntityMixin extends Entity implements IPhysicsEntity, 
     public Zone physicsMod$currentZone;
 
     @Override
-    public void onDeath(Zone zone) {
-        super.onDeath(zone);
+    public void onDeath() {
+        super.onDeath();
         if (physicsMod$body != null) PhysicsWorld.removeEntity(this);
     }
 
@@ -114,7 +117,7 @@ public abstract class ItemEntityMixin extends Entity implements IPhysicsEntity, 
     }
 
     @Override
-    public void onUseInteraction(Zone zone, Player player, ItemStack heldItemStack) {
+    public void onUseInteraction(Player player, ItemStack heldItemStack) {
         if (heldItemStack == null) return;
         if (heldItemStack.getItem().getID().equals(GravityGun.id.toString())) {
             if (physicsMod$isMagnet) return;

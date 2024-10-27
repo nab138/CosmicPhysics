@@ -9,7 +9,6 @@ import finalforeach.cosmicreach.blocks.Block;
 import finalforeach.cosmicreach.blocks.BlockPosition;
 import finalforeach.cosmicreach.blocks.BlockState;
 import finalforeach.cosmicreach.entities.player.Player;
-import finalforeach.cosmicreach.gamestates.InGame;
 import finalforeach.cosmicreach.items.ItemSlot;
 import finalforeach.cosmicreach.util.Identifier;
 import finalforeach.cosmicreach.world.Zone;
@@ -53,7 +52,7 @@ public class PhysicsInfuser implements IModItem {
             return;
         }
 
-        Zone z = player.getZone(InGame.world);
+        Zone z = player.getZone();
         BlockUtil.setBlockAt(z, Block.AIR.getDefaultBlockState(), pos);
         PhysicsUtils.createBlockAt(new Vector3(pos.getGlobalX(), pos.getGlobalY(), pos.getGlobalZ()).add(0.5f), block, z);
     }

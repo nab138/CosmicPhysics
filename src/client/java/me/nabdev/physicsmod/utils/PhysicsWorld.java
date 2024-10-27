@@ -60,7 +60,6 @@ public class PhysicsWorld {
     private static void initializeWorld() {
         space = new PhysicsSpace(PhysicsSpace.BroadphaseType.DBVT);
         space.setGravity(new Vector3f(0, -9.81f, 0));
-        space.getSolverInfo().setJointErp(1.5f);
     }
 
     public static Vector3 getPlayerPos() {

@@ -18,12 +18,11 @@ public abstract class PlayerMixin {
     @Shadow
     private Entity entity;
 
-    @Shadow
-    public abstract Zone getZone(World world);
+    @Shadow public abstract Zone getZone();
 
     @Inject(method = "spawnDroppedItem", at = @At("HEAD"), cancellable = true)
     public void spawnDroppedItem(World world, ItemStack itemStack, CallbackInfo ci) {
-        Zone zone = getZone(world);
+        Zone zone = getZone();
         ItemEntity itemEntity = itemStack.spawnItemEntityAt(zone, this.entity.position);
         itemEntity.minPickupAge = 2.0F;
         itemEntity.position.add(entity.viewPositionOffset);

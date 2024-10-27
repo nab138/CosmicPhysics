@@ -1,25 +1,39 @@
 plugins {
     id "java"
-    id "cr_puzzle_gradle"
+    id "jigsaw"
     id "com.github.johnrengelman.shadow"
 }
 
-puzzle_loader {
-    accessManipulatorPath = file("src/main/resources/physics_mod.manipulator")
+loom {
+    splitEnvironmentSourceSets()
+
+    mods {
+        "physics" {
+            sourceSet sourceSets.main
+            sourceSet sourceSets.client
+        }
+    }
+    accessWidenerPath = file("src/main/resources/physics_mod.manipulator")
 }
 
 repositories {
     mavenCentral()
+    maven {
+        url "https://jitpack.io"
+    }
 }
 
 dependencies {
     bundle("com.github.stephengold:Libbulletjme:21.2.1")
     bundle("commons-io:commons-io:2.16.1")
+
+    cosmicReach("finalforeach:cosmicreach:${cosmic_reach_version}")
 }
 
 processResources {
-    // Locations of where to inject the properties
-    def resourceTargets = [ "puzzle.mod.json" ]
+    def resourceTargets = [ // Locations of where to inject the properties
+                            "puzzle.mod.json"
+    ]
 
     // Left item is the name in the target, right is the variable name
     def replaceProperties = [
