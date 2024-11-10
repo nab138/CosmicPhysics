@@ -1,4 +1,5 @@
 {
+  "formatVersion": 1,
   "id": "${mod_id}",
   "version": "${mod_version}",
   "name": "${mod_name}",
@@ -16,13 +17,17 @@
     ]
   },
   "mixins": [
-    "physics.mixins.json"
+    "physics.mixins.json",
+    {
+      "config": "physics.client.mixins.json",
+      "environment": "client"
+    }
   ],
   "dependencies": {
-    "cosmic-reach": ">=0.3.2-pre10",
-    "puzzle-loader": ">=2.0.4"
+    "cosmic-reach": ">=0.3.6",
+    "puzzle-loader": ">=2.1.3"
   },
-  "accessManipulator": "physics_mod.manipulator",
+  "accessTransformers": ["physics_mod.manipulator"],
   "meta": {
     "icon": "physics:icons/icon.png"
   }

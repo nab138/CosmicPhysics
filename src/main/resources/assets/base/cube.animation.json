@@ -1,0 +1,9 @@
+{
+  "animations": {
+    "animation.cube.idle": {
+      "loop": true,
+      "animation_length": 16,
+      "bones": {}
+    }
+  }
+}

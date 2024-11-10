@@ -2,7 +2,6 @@ package me.nabdev.physicsmod;
 
 import com.github.puzzle.core.loader.launch.provider.mod.entrypoint.impls.ClientModInitializer;
 import com.github.puzzle.game.PuzzleRegistries;
-import com.github.puzzle.game.events.OnPreLoadAssetsEvent;
 import com.github.puzzle.game.items.IModItem;
 import com.jme3.bullet.objects.PhysicsRigidBody;
 import finalforeach.cosmicreach.entities.EntityCreator;
@@ -14,7 +13,6 @@ import me.nabdev.physicsmod.items.Linker;
 import me.nabdev.physicsmod.items.MysticalGem;
 import me.nabdev.physicsmod.items.PhysicsInfuser;
 import me.nabdev.physicsmod.utils.NativeLibraryLoader;
-import org.greenrobot.eventbus.Subscribe;
 
 import java.util.function.Predicate;
 import java.util.logging.Level;
@@ -23,7 +21,7 @@ import java.util.logging.Level;
 public class PhysicsMod implements ClientModInitializer {
     @Override
     public void onInit() {
-        PuzzleRegistries.EVENT_BUS.register(this);
+        PuzzleRegistries.EVENT_BUS.subscribe(this);
         EntityCreator.registerEntityCreator(Cube.id.toString(), Cube::new);
         IModItem.registerItem(new MysticalGem());
         IModItem.registerItem(new PhysicsInfuser());
@@ -37,10 +35,6 @@ public class PhysicsMod implements ClientModInitializer {
             throw new RuntimeException("Failed to load native library. Please contact nab138, he may need to add support for your platform.");
         }
         PhysicsRigidBody.logger2.setLevel(Level.WARNING);
-    }
-
-    @Subscribe
-    public void onEvent(OnPreLoadAssetsEvent event) {
     }
 
     public static Predicate<Item> itemPredicate(String id) {

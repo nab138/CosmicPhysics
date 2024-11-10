@@ -1,4 +1,4 @@
-package me.nabdev.physicsmod.mixins;
+package me.nabdev.physicsmod.clientmixins;
 
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector3;

@@ -1,4 +1,4 @@
-package me.nabdev.physicsmod.mixins;
+package me.nabdev.physicsmod.clientmixins;
 
 import finalforeach.cosmicreach.entities.Entity;
 import finalforeach.cosmicreach.entities.ItemEntity;

@@ -1,4 +1,4 @@
-package me.nabdev.physicsmod.mixins;
+package me.nabdev.physicsmod.clientmixins;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Mesh;

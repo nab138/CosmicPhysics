@@ -1,4 +1,4 @@
-package me.nabdev.physicsmod.mixins;
+package me.nabdev.physicsmod.clientmixins;
 
 import finalforeach.cosmicreach.rendering.BatchedZoneRenderer;
 import finalforeach.cosmicreach.world.Chunk;

@@ -1,4 +1,4 @@
-package me.nabdev.physicsmod.mixins;
+package me.nabdev.physicsmod.clientmixins;
 
 import com.badlogic.gdx.graphics.PerspectiveCamera;
 import finalforeach.cosmicreach.gamestates.InGame;
