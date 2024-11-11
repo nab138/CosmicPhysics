@@ -13,7 +13,7 @@ import me.nabdev.physicsmod.items.MysticalGem;
 import me.nabdev.physicsmod.items.PhysicsInfuser;
 
 @SuppressWarnings("unused")
-public class PhysicsPostInitializer implements ClientPostModInitializer {
+public class PhysicsClientPostInitializer implements ClientPostModInitializer {
     public static Tag cheeseTag = Tag.of("cheese");
 
     @Override

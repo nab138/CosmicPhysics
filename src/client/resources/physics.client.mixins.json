@@ -4,17 +4,10 @@
   "package": "me.nabdev.physicsmod.clientmixins",
   "compatibilityLevel": "JAVA_17",
   "client": [
-    "BatchedZoneRendererMixin",
     "EntityModelInstanceMixin",
-    "ExperimentalItemModelMixin",
-    "InGameMixin",
-    "ItemEntityMixin",
-    "PlayerEntityMixin",
-    "PlayerMixin"
+    "InGameMixin"
   ],
   "injectors": {
     "defaultRequire": 1
-  },
-  "mixins": [
-  ]
+  }
 }

@@ -7,8 +7,6 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import finalforeach.cosmicreach.chat.Chat;
 import finalforeach.cosmicreach.entities.Entity;
 import finalforeach.cosmicreach.entities.EntityCreator;
-import finalforeach.cosmicreach.gamestates.InGame;
-import finalforeach.cosmicreach.world.Zone;
 import me.nabdev.physicsmod.entities.Cube;
 import me.nabdev.physicsmod.utils.PhysicsWorld;
 
@@ -23,12 +21,12 @@ public class Commands {
                         PhysicsWorld.reset();
                         return 0;
                     } else if (action.equals("cube")) {
-                        Entity e = EntityCreator.get(Cube.id.toString());
-                        e.setPosition(InGame.getLocalPlayer().getPosition());
-
-                        Zone zone = InGame.getLocalPlayer().getZone();
-                        zone.addEntity(e);
-                        Chat.MAIN_CLIENT_CHAT.addMessage(null, "Spawned Cube");
+//                        Entity e = EntityCreator.get(Cube.id.toString());
+//                        e.setPosition(InGame.getLocalPlayer().getPosition());
+//
+//                        Zone zone = InGame.getLocalPlayer().getZone();
+//                        zone.addEntity(e);
+                        Chat.MAIN_CLIENT_CHAT.addMessage(null, "Unsupported Spawned Cube");
                         return 0;
                     }
                     Chat.MAIN_CLIENT_CHAT.addMessage(null, "Unknown action!");

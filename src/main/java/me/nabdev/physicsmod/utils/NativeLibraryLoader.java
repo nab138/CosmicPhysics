@@ -2,6 +2,7 @@ package me.nabdev.physicsmod.utils;
 
 import com.jme3.system.JmeSystem;
 import com.jme3.system.Platform;
+import finalforeach.cosmicreach.io.SaveLocation;
 import me.nabdev.physicsmod.Constants;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -11,16 +12,21 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 public final class NativeLibraryLoader {
-    public static boolean loadLibbulletjme(String buildType, String flavor) {
+    public static boolean loadLibbulletjme(String buildType, String flavor, boolean useTempDir) {
         String fullName = getFullName(buildType, flavor);
 
         boolean success = false;
         try {
             InputStream in = NativeLibraryLoader.class.getClassLoader().getResourceAsStream("natives/" + fullName);
-            //noinspection SpellCheckingInspection
-            File fileOut = new File(System.getProperty("java.io.tmpdir") + "/cosmicphysics/natives/" + fullName);
-            fileOut.deleteOnExit();
-            Constants.LOGGER.info("Writing native to: {}", fileOut.getAbsolutePath());
+            File fileOut;
+            if(useTempDir) {
+                //noinspection SpellCheckingInspection
+                fileOut = new File(System.getProperty("java.io.tmpdir") + "/cosmicphysics/natives/" + fullName);
+                fileOut.deleteOnExit();
+            } else {
+                fileOut = new File(SaveLocation.getSaveFolder() + "/natives/" + fullName);
+            }
+            Constants.LOGGER.info("Writing physics native to: {}", fileOut.getAbsolutePath());
             OutputStream out = FileUtils.openOutputStream(fileOut);
             assert in != null;
             IOUtils.copy(in, out);

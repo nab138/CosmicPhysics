@@ -1,4 +1,4 @@
-package me.nabdev.physicsmod.clientmixins;
+package me.nabdev.physicsmod.mixins;
 
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector3;
@@ -18,12 +18,6 @@ import org.spongepowered.asm.mixin.Unique;
 public class PlayerEntityMixin extends Entity {
     public PlayerEntityMixin(String entityTypeId) {
         super(entityTypeId);
-    }
-
-    @Override
-    public void update(Zone zone, double delta) {
-        PhysicsWorld.tick(delta);
-        super.update(zone, delta);
     }
 
     @Override

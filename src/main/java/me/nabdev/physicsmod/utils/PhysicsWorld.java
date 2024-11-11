@@ -7,14 +7,14 @@ import com.jme3.bullet.collision.shapes.BoxCollisionShape;
 import com.jme3.bullet.collision.shapes.CompoundCollisionShape;
 import com.jme3.bullet.objects.PhysicsRigidBody;
 import com.jme3.math.Vector3f;
+import finalforeach.cosmicreach.GameSingletons;
 import finalforeach.cosmicreach.blocks.Block;
 import finalforeach.cosmicreach.blocks.BlockState;
-import finalforeach.cosmicreach.gamestates.InGame;
 import finalforeach.cosmicreach.savelib.blockdata.IBlockData;
 import finalforeach.cosmicreach.world.Chunk;
 import finalforeach.cosmicreach.world.Zone;
+import me.nabdev.physicsmod.Constants;
 import me.nabdev.physicsmod.entities.Cube;
-import me.nabdev.physicsmod.items.GravityGun;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -46,11 +46,15 @@ public class PhysicsWorld {
     public static boolean readyToInitialize = false;
     public static IPhysicsEntity queuedMagnetEntity = null;
 
+    static {
+        GameSingletons.updateObservers.add(PhysicsWorld::tick);
+    }
+
     public static void initialize() {
         readyToInitialize = true;
     }
 
-    private static void runInit() {
+    public static void runInit() {
         if (space != null || isRunning) return;
         readyToInitialize = false;
         isRunning = true;
@@ -58,12 +62,9 @@ public class PhysicsWorld {
     }
 
     private static void initializeWorld() {
+        Constants.LOGGER.info("Initializing Physics World");
         space = new PhysicsSpace(PhysicsSpace.BroadphaseType.DBVT);
         space.setGravity(new Vector3f(0, -9.81f, 0));
-    }
-
-    public static Vector3 getPlayerPos() {
-        return InGame.getLocalPlayer().getPosition().cpy();
     }
 
     private static void addRigidBody(PhysicsRigidBody body) {
@@ -100,7 +101,7 @@ public class PhysicsWorld {
         if (magnetEntity != null) {
             magnetEntity.setMagnetised(false);
             magnetEntity = null;
-            GravityGun.isMag = false;
+            //GravityGun.isMag = false;
         }
     }
 
@@ -112,7 +113,7 @@ public class PhysicsWorld {
         dropMagnet();
         magnetEntity = entity;
         magnetEntity.setMagnetised(true);
-        GravityGun.isMag = true;
+        //GravityGun.isMag = true;
     }
 
     public static void reset() {
@@ -211,9 +212,9 @@ public class PhysicsWorld {
     }
 
     public static IPhysicsEntity getEntityById(int id) {
-        for (IPhysicsEntity entity : allObjects) {
-            if (entity.getID() == id) return entity;
-        }
+//        for (IPhysicsEntity entity : allObjects) {
+//            if (entity.getID() == id) return entity;
+//        }
         return null;
     }
 }

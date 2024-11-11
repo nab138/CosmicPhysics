@@ -9,11 +9,11 @@
   ],
   "entrypoints": {
     "preInit": [],
-    "client_init": [
+    "init": [
       "me.nabdev.physicsmod.PhysicsMod"
     ],
     "client_postInit": [
-      "me.nabdev.physicsmod.PhysicsPostInitializer"
+      "me.nabdev.physicsmod.PhysicsClientPostInitializer"
     ]
   },
   "mixins": [

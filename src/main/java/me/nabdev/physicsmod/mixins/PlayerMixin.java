@@ -1,4 +1,4 @@
-package me.nabdev.physicsmod.clientmixins;
+package me.nabdev.physicsmod.mixins;
 
 import finalforeach.cosmicreach.entities.Entity;
 import finalforeach.cosmicreach.entities.ItemEntity;
@@ -7,6 +7,7 @@ import finalforeach.cosmicreach.items.ItemStack;
 import finalforeach.cosmicreach.world.World;
 import finalforeach.cosmicreach.world.Zone;
 import me.nabdev.physicsmod.utils.IPhysicsItem;
+import me.nabdev.physicsmod.utils.PhysicsUtils;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -27,7 +28,8 @@ public abstract class PlayerMixin {
         itemEntity.minPickupAge = 2.0F;
         itemEntity.position.add(entity.viewPositionOffset);
         itemEntity.velocity.set(entity.viewDirection).scl(7.0F).add(0.0F, 1.0F, 0.0F);
-        ((IPhysicsItem) itemEntity).physicsMod$setPlayerDropped();
+
+        ((IPhysicsItem) itemEntity).physicsMod$setPlayerDropped(PhysicsUtils.v3ToV3f(entity.viewDirection));
         ci.cancel();
     }
 }

@@ -2,7 +2,6 @@ package me.nabdev.physicsmod.entities;
 
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.math.Quaternion;
 import com.badlogic.gdx.math.Vector3;
@@ -13,33 +12,29 @@ import com.jme3.bullet.collision.shapes.BoxCollisionShape;
 import com.jme3.bullet.objects.PhysicsRigidBody;
 import com.jme3.math.Vector3f;
 import finalforeach.cosmicreach.GameSingletons;
-import finalforeach.cosmicreach.Threads;
 import finalforeach.cosmicreach.TickRunner;
 import finalforeach.cosmicreach.blocks.Block;
 import finalforeach.cosmicreach.blocks.BlockPosition;
 import finalforeach.cosmicreach.blocks.BlockState;
 import finalforeach.cosmicreach.entities.Entity;
+import finalforeach.cosmicreach.entities.EntityUniqueId;
 import finalforeach.cosmicreach.entities.player.Player;
-import finalforeach.cosmicreach.gamestates.GameState;
 import finalforeach.cosmicreach.items.ItemStack;
-import finalforeach.cosmicreach.rendering.entities.EntityModel;
+import finalforeach.cosmicreach.networking.server.ServerSingletons;
 import finalforeach.cosmicreach.savelib.crbin.CRBinDeserializer;
 import finalforeach.cosmicreach.savelib.crbin.CRBinSerializer;
 import finalforeach.cosmicreach.util.Identifier;
-import finalforeach.cosmicreach.world.Sky;
 import finalforeach.cosmicreach.world.Zone;
 import me.nabdev.physicsmod.Constants;
-import me.nabdev.physicsmod.items.GravityGun;
-import me.nabdev.physicsmod.items.Linker;
-import me.nabdev.physicsmod.items.PhysicsInfuser;
-import me.nabdev.physicsmod.utils.*;
-
-import java.util.Random;
+import me.nabdev.physicsmod.utils.IPhysicsEntity;
+import me.nabdev.physicsmod.utils.PhysicsUtils;
+import me.nabdev.physicsmod.utils.PhysicsWorld;
 
 public class Cube extends Entity implements IPhysicsEntity {
     public static final Identifier id = Identifier.of(Constants.MOD_ID,"cube");
 
     private final PhysicsRigidBody body;
+    private Quaternion lastRotation = new Quaternion();
     public Quaternion rotation = new Quaternion();
     public boolean isMagnet = false;
     public float mass = 2.5f;
@@ -55,18 +50,14 @@ public class Cube extends Entity implements IPhysicsEntity {
     final BlockPosition tmpBlockPos = new BlockPosition(null, 0, 0, 0);
     final Color tinyTint = Color.WHITE.cpy();
 
-    public int physicsID = -1;
-    public static Random random = new Random();
-
     private Vector3f scale = new Vector3f(1, 1, 1);
+
+    private static final EntityRenderRotationPacket rotationPacket = new EntityRenderRotationPacket();
+
 
     public Cube(Vector3f pos, BlockState blockState) {
         super(id.toString());
 
-        Threads.runOnMainThread(
-                () -> this.modelInstance = GameSingletons.entityModelLoader
-                        .load(this, "model_cube.json", "cube.animation.json", "animation.cube.idle", "cheese.png").getNewModelInstance()
-        );
         this.hasGravity = false;
         this.blockState = blockState;
 
@@ -79,12 +70,9 @@ public class Cube extends Entity implements IPhysicsEntity {
 
         PhysicsWorld.addCube(this);
 
-        if (ropeTexture == null) {
-            ropeTexture = TextureUtils.getTextureForBlock(Block.getInstance("metal_panel").getDefaultBlockState());
-        }
-
-        // Get random physics ID between min integer value and max integer value
-        physicsID = random.nextInt();
+        //if (ropeTexture == null) {
+            //ropeTexture = TextureUtils.getTextureForBlock(Block.getInstance("metal_panel").getDefaultBlockState());
+        //}
     }
 
     public Cube() {
@@ -97,7 +85,7 @@ public class Cube extends Entity implements IPhysicsEntity {
         this.localBoundingBox.max.set(0.5F, 0.5F, 0.5F);
         this.localBoundingBox.update();
         blockState = BlockState.getInstance(deserialize.readString("blockID"));
-        setTexture(TextureUtils.getTextureForBlock(blockState));
+        //setTexture(TextureUtils.getTextureForBlock(blockState));
         body.setPhysicsLocation(new Vector3f(position.x, position.y, position.z));
         float[] rot = deserialize.readFloatArray("rotation");
         rotation = new Quaternion(rot[0], rot[1], rot[2], rot[3]);
@@ -105,9 +93,8 @@ public class Cube extends Entity implements IPhysicsEntity {
         if (deserialize.readBoolean("isMagnet", false)) {
             PhysicsWorld.magnet(this);
         }
-        physicsID = deserialize.readInt("physicsID", physicsID);
-        int[] linkedIDs = deserialize.readIntArray("linkedEntities");
-        PhysicsUtils.queueLinks(this, linkedIDs);
+//        int[] linkedIDs = deserialize.readIntArray("linkedEntities");
+//        PhysicsUtils.queueLinks(this, linkedIDs);
     }
 
     public void write(CRBinSerializer serial) {
@@ -115,18 +102,19 @@ public class Cube extends Entity implements IPhysicsEntity {
         serial.writeString("blockID", blockState.getSaveKey());
         serial.writeFloatArray("rotation", new float[]{rotation.x, rotation.y, rotation.z, rotation.w});
         serial.writeBoolean("isMagnet", isMagnet);
-        serial.writeInt("physicsID", physicsID);
-        int[] linkedIDs = new int[linkedEntities.size];
-        for (int i = 0; i < linkedEntities.size; i++) {
-            linkedIDs[i] = linkedEntities.get(i).getID();
-        }
-        serial.writeIntArray("linkedEntities", linkedIDs);
+//        serial.writeInt("physicsID", physicsID);
+//        int[] linkedIDs = new int[linkedEntities.size];
+//        for (int i = 0; i < linkedEntities.size; i++) {
+//            linkedIDs[i] = linkedEntities.get(i).getID();
+//        }
+//        serial.writeIntArray("linkedEntities", linkedIDs);
     }
 
     public static Vector3f getSpawnPos() {
-        PerspectiveCamera cam = ((ICameraOwner) GameState.IN_GAME).browserMod$getCamera();
-        Vector3 offsetPos = PhysicsWorld.getPlayerPos().add(0, 1.5f, 0).add(cam.direction.cpy().scl(2f));
-        return new Vector3f(offsetPos.x, offsetPos.y, offsetPos.z);
+//        PerspectiveCamera cam = ((ICameraOwner) GameState.IN_GAME).browserMod$getCamera();
+//        Vector3 offsetPos = PhysicsWorld.getPlayerPos().add(0, 1.5f, 0).add(cam.direction.cpy().scl(2f));
+//        return new Vector3f(offsetPos.x, offsetPos.y, offsetPos.z);
+        return new Vector3f(0, 0, 0);
     }
 
 
@@ -145,13 +133,34 @@ public class Cube extends Entity implements IPhysicsEntity {
 
         this.getBoundingBox(this.globalBoundingBox);
         this.updateEntityChunk(zone);
+
+        if (ServerSingletons.SERVER != null) {
+            if (!PhysicsUtils.epsilonEquals(rotation, lastRotation)) {
+                rotationPacket.setEntity(this);
+                ServerSingletons.SERVER.broadcast(zone, rotationPacket);
+            }
+
+            boolean shouldSendPacket;
+            shouldSendPacket = !this.position.epsilonEquals(this.lastPosition);
+            shouldSendPacket |= !this.viewDirection.epsilonEquals(this.lastViewDirection);
+            if (shouldSendPacket) {
+                positionPacket.setEntity(this);
+                ServerSingletons.SERVER.broadcast(zone, positionPacket);
+            }
+        }
+
+        this.lastViewDirection.set(this.viewDirection);
+
+        lastRotation.set(rotation);
     }
 
     @Override
     public void render(Camera camera) {
-        if (this.modelInstance == null) return;
+        if (this.modelInstance == null && this.blockState != null) {
+            this.modelInstance = GameSingletons.itemEntityModelLoader.load(new ItemStack(blockState.getItem()));
+        }
         if (queuedTexture != null) {
-            ((EntityModel) this.modelInstance.getModel()).diffuseTexture = queuedTexture;
+            //((EntityModel) this.modelInstance.getModel()).diffuseTexture = queuedTexture;
             queuedTexture = null;
         }
         tmpRenderPos.set(this.lastRenderPosition);
@@ -163,13 +172,14 @@ public class Cube extends Entity implements IPhysicsEntity {
             tmpModelMatrix.translate(tmpRenderPos);
             tmpModelMatrix.rotate(rotation);
             tmpModelMatrix.scale(scale.x, scale.y, scale.z);
+            tmpModelMatrix.translate(-scale.x / 2, -scale.y / 2, -scale.z / 2);
 
-            try {
-                Entity.setLightingColor(currentZone, position, Sky.currentSky.currentAmbientColor, tinyTint, tmpBlockPos, tmpBlockPos);
-            } catch (Exception ignore) {
-                tinyTint.set(Color.WHITE.cpy());
-            }
-            ((IPhysicsModelInstance) modelInstance).tintSet(tinyTint.add(0.2f, 0.2f, 0.2f, 0));
+//            try {
+//                Entity.setLightingColor(currentZone, position, Sky.currentSky.currentAmbientColor, tinyTint, tmpBlockPos, tmpBlockPos);
+//            } catch (Exception ignore) {
+//                tinyTint.set(Color.WHITE.cpy());
+//            }
+            //((IPhysicsModelInstance) modelInstance).tintSet(tinyTint.add(0.2f, 0.2f, 0.2f, 0));
             this.modelInstance.render(this, camera, tmpModelMatrix);
         }
 
@@ -209,30 +219,30 @@ public class Cube extends Entity implements IPhysicsEntity {
             tmpModelMatrix.rotate(rotation);
             tmpModelMatrix.scale(0.2f, 0.2f, length);
 
-            Texture old = this.getTexture();
-            this.setTexture(ropeTexture);
+//            Texture old = this.getTexture();
+//            this.setTexture(ropeTexture);
             this.modelInstance.render(this, camera, tmpModelMatrix);
-            this.setTexture(old);
+//            this.setTexture(old);
         }
     }
 
     @Override
     public void onUseInteraction(Player player, ItemStack heldItemStack) {
         if (heldItemStack == null) return;
-        if (heldItemStack.getItem().getID().equals(GravityGun.id.toString())) {
-            if (isMagnet) return;
-            PhysicsWorld.magnet(this);
-        } else if (heldItemStack.getItem().getID().equals(PhysicsInfuser.id.toString())) {
-            PhysicsInfuser.ignoreNextUse = true;
-            solidify();
-        } else if (heldItemStack.getItem().getID().equals(Linker.id.toString())) {
-            if (Linker.entityOne == null) {
-                Linker.entityOne = this;
-            } else if (Linker.entityTwo == null && Linker.entityOne != this) {
-                Linker.entityTwo = this;
-                Linker.link();
-            }
-        }
+//        if (heldItemStack.getItem().getID().equals(GravityGun.id.toString())) {
+//            if (isMagnet) return;
+//            PhysicsWorld.magnet(this);
+//        } else if (heldItemStack.getItem().getID().equals(PhysicsInfuser.id.toString())) {
+//            PhysicsInfuser.ignoreNextUse = true;
+//            solidify();
+//        } else if (heldItemStack.getItem().getID().equals(Linker.id.toString())) {
+//            if (Linker.entityOne == null) {
+//                Linker.entityOne = this;
+//            } else if (Linker.entityTwo == null && Linker.entityOne != this) {
+//                Linker.entityTwo = this;
+//                Linker.link();
+//            }
+//        }
     }
 
     public void setVelocity(Vector3 vel) {
@@ -246,8 +256,8 @@ public class Cube extends Entity implements IPhysicsEntity {
         }
 
         body.activate(true);
-        PerspectiveCamera cam = ((ICameraOwner) GameState.IN_GAME).browserMod$getCamera();
-        this.setVelocity(cam.direction.cpy().scl(12));
+//        PerspectiveCamera cam = ((ICameraOwner) GameState.IN_GAME).browserMod$getCamera();
+//        this.setVelocity(cam.direction.cpy().scl(12));
     }
 
     @Override
@@ -263,6 +273,16 @@ public class Cube extends Entity implements IPhysicsEntity {
     }
 
     @Override
+    public Quaternion getRotation() {
+        return rotation;
+    }
+
+    @Override
+    public void setRenderRotation(Quaternion rotation) {
+        this.rotation = rotation;
+    }
+
+    @Override
     public void setMagnetised(boolean magnetised) {
         isMagnet = magnetised;
     }
@@ -274,7 +294,7 @@ public class Cube extends Entity implements IPhysicsEntity {
 
     @Override
     public void onDeath() {
-        Linker.clearLinksFor(this);
+        //Linker.clearLinksFor(this);
         PhysicsWorld.removeCube(this);
         if (zone != null) super.onDeath();
     }
@@ -303,18 +323,6 @@ public class Cube extends Entity implements IPhysicsEntity {
         this.onDeath();
     }
 
-    public void setTexture(Texture tex) {
-        if (this.modelInstance == null) {
-            queuedTexture = tex;
-            return;
-        }
-        ((EntityModel) this.modelInstance.getModel()).diffuseTexture = tex;
-    }
-
-    public Texture getTexture() {
-        return ((EntityModel) this.modelInstance.getModel()).diffuseTexture;
-    }
-
     public static float angleBetween(Vector3 a, Vector3 b) {
         return (float) Math.acos(a.dot(b) / (a.len() * b.len()));
     }
@@ -325,8 +333,8 @@ public class Cube extends Entity implements IPhysicsEntity {
     }
 
     @Override
-    public int getID() {
-        return physicsID;
+    public EntityUniqueId getID() {
+        return uniqueId;
     }
 
     @SuppressWarnings("unused")

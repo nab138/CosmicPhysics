@@ -3,8 +3,10 @@ package me.nabdev.physicsmod.items;
 import com.badlogic.gdx.math.Vector3;
 import com.github.puzzle.game.items.IModItem;
 import com.github.puzzle.game.items.data.DataTagManifest;
+import com.github.puzzle.game.util.BlockSelectionUtil;
 import com.github.puzzle.game.util.BlockUtil;
-import finalforeach.cosmicreach.BlockSelection;
+import com.github.puzzle.game.util.IClientNetworkManager;
+import finalforeach.cosmicreach.GameSingletons;
 import finalforeach.cosmicreach.blocks.Block;
 import finalforeach.cosmicreach.blocks.BlockPosition;
 import finalforeach.cosmicreach.blocks.BlockState;
@@ -13,6 +15,7 @@ import finalforeach.cosmicreach.items.ItemSlot;
 import finalforeach.cosmicreach.util.Identifier;
 import finalforeach.cosmicreach.world.Zone;
 import me.nabdev.physicsmod.Constants;
+import me.nabdev.physicsmod.entities.CreateCubePacket;
 import me.nabdev.physicsmod.utils.PhysicsUtils;
 
 public class PhysicsInfuser implements IModItem {
@@ -24,6 +27,8 @@ public class PhysicsInfuser implements IModItem {
     public PhysicsInfuser() {
         addTexture(IModItem.MODEL_2_5D_ITEM, Identifier.of(Constants.MOD_ID, "infuser.png"));
     }
+
+    public static CreateCubePacket createPacket = new CreateCubePacket();
 
     @Override
     public String toString() {
@@ -46,15 +51,25 @@ public class PhysicsInfuser implements IModItem {
             ignoreNextUse = false;
             return;
         }
-        BlockState block = BlockSelection.getBlockLookingAt();
-        BlockPosition pos = BlockSelection.getBlockPositionLookingAt();
+        BlockState block = BlockSelectionUtil.getBlockLookingAt();
+        BlockPosition pos = BlockSelectionUtil.getBlockPositionLookingAt();
         if (block == null || pos == null) {
             return;
         }
 
         Zone z = player.getZone();
-        BlockUtil.setBlockAt(z, Block.AIR.getDefaultBlockState(), pos);
-        PhysicsUtils.createBlockAt(new Vector3(pos.getGlobalX(), pos.getGlobalY(), pos.getGlobalZ()).add(0.5f), block, z);
+        if(z == null) {
+            return;
+        }
+        if (IClientNetworkManager.isConnected()) {
+            createPacket.setCubeInfo(z, pos, block);
+            IClientNetworkManager.sendAsClient(createPacket);
+        }
+
+        if(GameSingletons.isHost) {
+            BlockUtil.setBlockAt(z, Block.AIR.getDefaultBlockState(), pos);
+            PhysicsUtils.createBlockAt(new Vector3(pos.getGlobalX(), pos.getGlobalY(), pos.getGlobalZ()).add(0.5f), block, z);
+        }
     }
 
     @Override
