@@ -26,6 +26,7 @@ import finalforeach.cosmicreach.savelib.crbin.CRBinSerializer;
 import finalforeach.cosmicreach.util.Identifier;
 import finalforeach.cosmicreach.world.Zone;
 import me.nabdev.physicsmod.Constants;
+import me.nabdev.physicsmod.items.GravityGun;
 import me.nabdev.physicsmod.utils.IPhysicsEntity;
 import me.nabdev.physicsmod.utils.PhysicsUtils;
 import me.nabdev.physicsmod.utils.PhysicsWorld;
@@ -34,9 +35,9 @@ public class Cube extends Entity implements IPhysicsEntity {
     public static final Identifier id = Identifier.of(Constants.MOD_ID,"cube");
 
     private final PhysicsRigidBody body;
-    private Quaternion lastRotation = new Quaternion();
+    private final Quaternion lastRotation = new Quaternion();
     public Quaternion rotation = new Quaternion();
-    public boolean isMagnet = false;
+    public Player magnetPlayer = null;
     public float mass = 2.5f;
     public Texture queuedTexture = null;
 
@@ -76,7 +77,7 @@ public class Cube extends Entity implements IPhysicsEntity {
     }
 
     public Cube() {
-        this(getSpawnPos(), Block.getInstance("cheese").getDefaultBlockState());
+        this(new Vector3f(0f,0f,0f), Block.getInstance("cheese").getDefaultBlockState());
     }
 
     public void read(CRBinDeserializer deserialize) {
@@ -90,9 +91,6 @@ public class Cube extends Entity implements IPhysicsEntity {
         float[] rot = deserialize.readFloatArray("rotation");
         rotation = new Quaternion(rot[0], rot[1], rot[2], rot[3]);
         body.setPhysicsRotation(new com.jme3.math.Quaternion(rot[0], rot[1], rot[2], rot[3]));
-        if (deserialize.readBoolean("isMagnet", false)) {
-            PhysicsWorld.magnet(this);
-        }
 //        int[] linkedIDs = deserialize.readIntArray("linkedEntities");
 //        PhysicsUtils.queueLinks(this, linkedIDs);
     }
@@ -101,20 +99,11 @@ public class Cube extends Entity implements IPhysicsEntity {
         super.write(serial);
         serial.writeString("blockID", blockState.getSaveKey());
         serial.writeFloatArray("rotation", new float[]{rotation.x, rotation.y, rotation.z, rotation.w});
-        serial.writeBoolean("isMagnet", isMagnet);
-//        serial.writeInt("physicsID", physicsID);
 //        int[] linkedIDs = new int[linkedEntities.size];
 //        for (int i = 0; i < linkedEntities.size; i++) {
 //            linkedIDs[i] = linkedEntities.get(i).getID();
 //        }
 //        serial.writeIntArray("linkedEntities", linkedIDs);
-    }
-
-    public static Vector3f getSpawnPos() {
-//        PerspectiveCamera cam = ((ICameraOwner) GameState.IN_GAME).browserMod$getCamera();
-//        Vector3 offsetPos = PhysicsWorld.getPlayerPos().add(0, 1.5f, 0).add(cam.direction.cpy().scl(2f));
-//        return new Vector3f(offsetPos.x, offsetPos.y, offsetPos.z);
-        return new Vector3f(0, 0, 0);
     }
 
 
@@ -124,7 +113,7 @@ public class Cube extends Entity implements IPhysicsEntity {
         if (!PhysicsWorld.isRunning) return;
         PhysicsWorld.alertChunk(zone, zone.getChunkAtPosition(this.position));
 
-        if (isMagnet) PhysicsUtils.applyMagnetForce(position, body);
+        if (magnetPlayer != null) PhysicsUtils.applyMagnetForce(magnetPlayer, position, body);
 
         Vector3f pos = body.getPhysicsLocation(null);
         com.jme3.math.Quaternion rot = body.getPhysicsRotation(null);
@@ -229,9 +218,10 @@ public class Cube extends Entity implements IPhysicsEntity {
     @Override
     public void onUseInteraction(Player player, ItemStack heldItemStack) {
         if (heldItemStack == null) return;
-//        if (heldItemStack.getItem().getID().equals(GravityGun.id.toString())) {
-//            if (isMagnet) return;
-//            PhysicsWorld.magnet(this);
+        if (heldItemStack.getItem().getID().equals(GravityGun.id.toString())) {
+            if (magnetPlayer != null) return;
+            PhysicsWorld.magnet(player, this);
+        }
 //        } else if (heldItemStack.getItem().getID().equals(PhysicsInfuser.id.toString())) {
 //            PhysicsInfuser.ignoreNextUse = true;
 //            solidify();
@@ -250,14 +240,13 @@ public class Cube extends Entity implements IPhysicsEntity {
     }
 
     @Override
-    public void hit(float amount) {
-        if (isMagnet) {
-            PhysicsWorld.dropMagnet();
+    public void onAttackInteraction(Entity sourceEntity) {
+        if (magnetPlayer != null) {
+            PhysicsWorld.dropMagnet(magnetPlayer);
         }
 
         body.activate(true);
-//        PerspectiveCamera cam = ((ICameraOwner) GameState.IN_GAME).browserMod$getCamera();
-//        this.setVelocity(cam.direction.cpy().scl(12));
+        setVelocity(sourceEntity.viewDirection.scl(12f));
     }
 
     @Override
@@ -283,8 +272,8 @@ public class Cube extends Entity implements IPhysicsEntity {
     }
 
     @Override
-    public void setMagnetised(boolean magnetised) {
-        isMagnet = magnetised;
+    public void setMagnetised(Player magnetPlayer) {
+        this.magnetPlayer = magnetPlayer;
     }
 
     @Override

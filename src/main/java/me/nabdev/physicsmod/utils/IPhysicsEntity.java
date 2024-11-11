@@ -5,6 +5,7 @@ import com.badlogic.gdx.math.collision.BoundingBox;
 import com.badlogic.gdx.utils.Array;
 import com.jme3.bullet.objects.PhysicsRigidBody;
 import finalforeach.cosmicreach.entities.EntityUniqueId;
+import finalforeach.cosmicreach.entities.player.Player;
 
 public interface IPhysicsEntity {
     PhysicsRigidBody getBody();
@@ -18,7 +19,7 @@ public interface IPhysicsEntity {
     default void solidify() {
     }
 
-    void setMagnetised(boolean magnetised);
+    void setMagnetised(Player magnetPlayer);
 
     void forceActivate();
 

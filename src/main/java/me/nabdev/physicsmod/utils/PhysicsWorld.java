@@ -10,11 +10,13 @@ import com.jme3.math.Vector3f;
 import finalforeach.cosmicreach.GameSingletons;
 import finalforeach.cosmicreach.blocks.Block;
 import finalforeach.cosmicreach.blocks.BlockState;
+import finalforeach.cosmicreach.entities.player.Player;
 import finalforeach.cosmicreach.savelib.blockdata.IBlockData;
 import finalforeach.cosmicreach.world.Chunk;
 import finalforeach.cosmicreach.world.Zone;
 import me.nabdev.physicsmod.Constants;
 import me.nabdev.physicsmod.entities.Cube;
+import me.nabdev.physicsmod.items.GravityGun;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -39,12 +41,12 @@ public class PhysicsWorld {
     public static final HashMap<Integer, PhysicsRigidBody> blockBodies = new HashMap<>();
     private static final HashMap<Chunk, ChunkBodyData> chunkBodies = new HashMap<>();
     private static final ArrayList<PhysicsRigidBody> queuedBodies = new ArrayList<>();
-    public static IPhysicsEntity magnetEntity = null;
+    public static HashMap<String, IPhysicsEntity> magnetEntities = new HashMap<>();
 
     public static boolean isRunning = false;
 
     public static boolean readyToInitialize = false;
-    public static IPhysicsEntity queuedMagnetEntity = null;
+    public static HashMap<Player, IPhysicsEntity> queuedMagnetEntities = new HashMap<>();
 
     static {
         GameSingletons.updateObservers.add(PhysicsWorld::tick);
@@ -97,23 +99,23 @@ public class PhysicsWorld {
         addEntity(cube);
     }
 
-    public static void dropMagnet() {
-        if (magnetEntity != null) {
-            magnetEntity.setMagnetised(false);
+    public static void dropMagnet(Player p) {
+        if (magnetEntities.containsKey(p.getAccount().getUniqueId())) {
+            IPhysicsEntity magnetEntity = magnetEntities.get(p.getAccount().getUniqueId());
+            magnetEntity.setMagnetised(null);
             magnetEntity = null;
-            //GravityGun.isMag = false;
         }
     }
 
-    public static void magnet(IPhysicsEntity entity) {
-        queuedMagnetEntity = entity;
+    public static void magnet(Player player, IPhysicsEntity entity) {
+        queuedMagnetEntities.put(player, entity);
     }
 
-    private static void setMagnet(IPhysicsEntity entity) {
-        dropMagnet();
-        magnetEntity = entity;
-        magnetEntity.setMagnetised(true);
-        //GravityGun.isMag = true;
+    private static void setMagnet(Player player, IPhysicsEntity entity) {
+        dropMagnet(player);
+        magnetEntities.put(player.getAccount().getUniqueId(), entity);
+        entity.setMagnetised(player);
+        GravityGun.isPlayerMag.put(player.getAccount().getUniqueId(), true);
     }
 
     public static void reset() {
@@ -130,10 +132,10 @@ public class PhysicsWorld {
         queuedBodies.clear();
         isRunning = false;
 
-        if (magnetEntity != null) {
-            magnetEntity.setMagnetised(false);
-            magnetEntity = null;
+        for(IPhysicsEntity e : magnetEntities.values()) {
+            e.setMagnetised(null);
         }
+        magnetEntities.clear();
     }
 
     public static void tick(double delta) {
@@ -145,9 +147,12 @@ public class PhysicsWorld {
             }
             queuedBodies.clear();
         }
-        if (queuedMagnetEntity != null) {
-            setMagnet(queuedMagnetEntity);
-            queuedMagnetEntity = null;
+        if(queuedMagnetEntities.size() > 0) {
+            for (Player queuedMagnetPlayer : queuedMagnetEntities.keySet()) {
+                IPhysicsEntity queuedMagnetEntity = queuedMagnetEntities.get(queuedMagnetPlayer);
+                setMagnet(queuedMagnetPlayer, queuedMagnetEntity);
+            }
+            queuedMagnetEntities.clear();
         }
         PhysicsUtils.applyQueuedLinks();
         space.update((float) delta);

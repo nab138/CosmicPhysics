@@ -49,7 +49,7 @@ public abstract class ItemEntityMixin extends Entity implements IPhysicsEntity, 
 
 
     @Unique
-    public boolean physicsMod$isMagnet = false;
+    public Player physicsMod$magnetPlayer = null;
 
     @Shadow
     ItemStack itemStack;
@@ -119,7 +119,7 @@ public abstract class ItemEntityMixin extends Entity implements IPhysicsEntity, 
             if (physicsMod$playerDropped != null)
                 physicsMod$body.setLinearVelocity(physicsMod$playerDropped.mult(6f));
         }
-        if (physicsMod$isMagnet) PhysicsUtils.applyMagnetForce(position, physicsMod$body);
+        if (physicsMod$magnetPlayer != null) PhysicsUtils.applyMagnetForce(physicsMod$magnetPlayer, position, physicsMod$body);
 
         PhysicsWorld.alertChunk(zone, zone.getChunkAtPosition(this.position));
         Vector3f pos = physicsMod$body.getPhysicsLocation(null);
@@ -136,8 +136,7 @@ public abstract class ItemEntityMixin extends Entity implements IPhysicsEntity, 
                 ServerSingletons.SERVER.broadcast(zone, physicsMod$rotationPacket);
             }
 
-            boolean shouldSendPacket;
-            shouldSendPacket = !this.position.epsilonEquals(this.lastPosition);
+            boolean shouldSendPacket = !this.position.epsilonEquals(this.lastPosition);
             shouldSendPacket |= !this.viewDirection.epsilonEquals(this.lastViewDirection);
             if (shouldSendPacket) {
                 positionPacket.setEntity(this);
@@ -241,8 +240,8 @@ public abstract class ItemEntityMixin extends Entity implements IPhysicsEntity, 
 
     @Override
     public void onAttackInteraction(Entity sourceEntity) {
-        if (physicsMod$isMagnet) {
-            PhysicsWorld.dropMagnet();
+        if (physicsMod$magnetPlayer != null) {
+            PhysicsWorld.dropMagnet(physicsMod$magnetPlayer);
         }
 
         physicsMod$body.activate(true);
@@ -269,8 +268,8 @@ public abstract class ItemEntityMixin extends Entity implements IPhysicsEntity, 
 
     @SuppressWarnings("all")
     @Override
-    public void setMagnetised(boolean magnet) {
-        physicsMod$isMagnet = magnet;
+    public void setMagnetised(Player magnetPlayer) {
+        physicsMod$magnetPlayer = magnetPlayer;
     }
 
     @SuppressWarnings("all")
