@@ -19,7 +19,7 @@ public class PhysicsUtils {
 
     public static void applyMagnetForce(Player player, Vector3 position, PhysicsRigidBody body) {
         Vector3 playerPos = player.getPosition().cpy().add(0, 2, 0);
-        playerPos.add(player.getEntity().viewDirection.scl(2f));
+        playerPos.add(player.getEntity().viewDirection.cpy().scl(2f));
         Vector3f playerPosF = new Vector3f(playerPos.x, playerPos.y, playerPos.z);
 
         Vector3f myPos = new Vector3f(position.x, position.y, position.z);

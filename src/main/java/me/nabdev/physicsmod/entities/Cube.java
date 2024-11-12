@@ -62,7 +62,6 @@ public class Cube extends Entity implements IPhysicsEntity {
         this.hasGravity = false;
         this.blockState = blockState;
 
-        PhysicsWorld.initialize();
         BoxCollisionShape boxShape = new BoxCollisionShape(new Vector3f(0.5f, 0.5f, 0.5f));
         setPosition(pos.x, pos.y, pos.z);
         body = new PhysicsRigidBody(boxShape, mass);
@@ -110,7 +109,10 @@ public class Cube extends Entity implements IPhysicsEntity {
     @Override
     public void update(Zone zone, double delta) {
         currentZone = zone;
-        if (!PhysicsWorld.isRunning) return;
+        if (!PhysicsWorld.isRunning) {
+            PhysicsWorld.initialize();
+            return;
+        }
         PhysicsWorld.alertChunk(zone, zone.getChunkAtPosition(this.position));
 
         if (magnetPlayer != null) PhysicsUtils.applyMagnetForce(magnetPlayer, position, body);

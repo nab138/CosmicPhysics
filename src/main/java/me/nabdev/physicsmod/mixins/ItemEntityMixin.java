@@ -24,6 +24,7 @@ import finalforeach.cosmicreach.networking.server.ServerSingletons;
 import finalforeach.cosmicreach.util.Identifier;
 import finalforeach.cosmicreach.world.Zone;
 import me.nabdev.physicsmod.entities.EntityRenderRotationPacket;
+import me.nabdev.physicsmod.items.GravityGun;
 import me.nabdev.physicsmod.utils.IPhysicsEntity;
 import me.nabdev.physicsmod.utils.IPhysicsItem;
 import me.nabdev.physicsmod.utils.PhysicsUtils;
@@ -232,10 +233,10 @@ public abstract class ItemEntityMixin extends Entity implements IPhysicsEntity, 
     @Override
     public void onUseInteraction(Player player, ItemStack heldItemStack) {
         if (heldItemStack == null) return;
-//        if (heldItemStack.getItem().getID().equals(GravityGun.id.toString())) {
-//            if (physicsMod$isMagnet) return;
-//            PhysicsWorld.magnet(this);
-//        }
+        if (heldItemStack.getItem().getID().equals(GravityGun.id.toString())) {
+            if (physicsMod$magnetPlayer != null) return;
+            PhysicsWorld.magnet(player, this);
+        }
     }
 
     @Override

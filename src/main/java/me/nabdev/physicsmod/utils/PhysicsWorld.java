@@ -11,6 +11,7 @@ import finalforeach.cosmicreach.GameSingletons;
 import finalforeach.cosmicreach.blocks.Block;
 import finalforeach.cosmicreach.blocks.BlockState;
 import finalforeach.cosmicreach.entities.player.Player;
+import finalforeach.cosmicreach.networking.server.ServerSingletons;
 import finalforeach.cosmicreach.savelib.blockdata.IBlockData;
 import finalforeach.cosmicreach.world.Chunk;
 import finalforeach.cosmicreach.world.Zone;
@@ -47,6 +48,8 @@ public class PhysicsWorld {
 
     public static boolean readyToInitialize = false;
     public static HashMap<Player, IPhysicsEntity> queuedMagnetEntities = new HashMap<>();
+
+    public static MagnetPacket magnetPacket = new MagnetPacket();
 
     static {
         GameSingletons.updateObservers.add(PhysicsWorld::tick);
@@ -103,7 +106,11 @@ public class PhysicsWorld {
         if (magnetEntities.containsKey(p.getAccount().getUniqueId())) {
             IPhysicsEntity magnetEntity = magnetEntities.get(p.getAccount().getUniqueId());
             magnetEntity.setMagnetised(null);
-            magnetEntity = null;
+            magnetEntities.remove(p.getAccount().getUniqueId());
+            if (ServerSingletons.SERVER != null) {
+                magnetPacket.setPlayer(p, false);
+                ServerSingletons.SERVER.broadcast(p.getZone(), magnetPacket);
+            }
         }
     }
 
@@ -116,6 +123,10 @@ public class PhysicsWorld {
         magnetEntities.put(player.getAccount().getUniqueId(), entity);
         entity.setMagnetised(player);
         GravityGun.isPlayerMag.put(player.getAccount().getUniqueId(), true);
+        if (ServerSingletons.SERVER != null) {
+            magnetPacket.setPlayer(player, true);
+            ServerSingletons.SERVER.broadcast(player.getZone(), magnetPacket);
+        }
     }
 
     public static void reset() {
@@ -147,7 +158,7 @@ public class PhysicsWorld {
             }
             queuedBodies.clear();
         }
-        if(queuedMagnetEntities.size() > 0) {
+        if(!queuedMagnetEntities.isEmpty()) {
             for (Player queuedMagnetPlayer : queuedMagnetEntities.keySet()) {
                 IPhysicsEntity queuedMagnetEntity = queuedMagnetEntities.get(queuedMagnetPlayer);
                 setMagnet(queuedMagnetPlayer, queuedMagnetEntity);

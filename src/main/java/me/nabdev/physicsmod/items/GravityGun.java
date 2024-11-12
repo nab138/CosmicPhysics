@@ -2,6 +2,8 @@ package me.nabdev.physicsmod.items;
 
 import com.github.puzzle.game.items.IModItem;
 import com.github.puzzle.game.items.data.DataTagManifest;
+import com.github.puzzle.game.util.IClientNetworkManager;
+import finalforeach.cosmicreach.GameSingletons;
 import finalforeach.cosmicreach.entities.player.Player;
 import finalforeach.cosmicreach.items.ItemSlot;
 import finalforeach.cosmicreach.util.Identifier;
@@ -19,10 +21,16 @@ public class GravityGun implements IModItem {
         addTexture(IModItem.MODEL_2_5D_ITEM, Identifier.of(Constants.MOD_ID, "gravity_gun.png"));
     }
 
+    public static DropMagnetPacket dropMagnetPacket = new DropMagnetPacket();
+
     @Override
     public void use(ItemSlot slot, Player player) {
-        if (PhysicsWorld.magnetEntities.containsKey(player.getAccount().getUniqueId())) {
-            if (isPlayerMag.get(player.getAccount().getUniqueId())) PhysicsWorld.dropMagnet(player);
+        if (isPlayerMag.containsKey(player.getAccount().getUniqueId()) && isPlayerMag.get(player.getAccount().getUniqueId()))  {
+            if(GameSingletons.isHost) PhysicsWorld.dropMagnet(player);
+            else {
+                dropMagnetPacket.setPlayer(player.getAccount().getUniqueId());
+                IClientNetworkManager.sendAsClient(dropMagnetPacket);
+            }
         }
     }
 
