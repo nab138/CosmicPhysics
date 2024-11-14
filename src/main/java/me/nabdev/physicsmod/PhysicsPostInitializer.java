@@ -1,6 +1,6 @@
 package me.nabdev.physicsmod;
 
-import com.github.puzzle.core.loader.launch.provider.mod.entrypoint.impls.ClientPostModInitializer;
+import com.github.puzzle.core.loader.provider.mod.entrypoint.impls.PostModInitializer;
 import com.github.puzzle.game.oredict.ResourceDictionary;
 import com.github.puzzle.game.oredict.tags.Tag;
 import finalforeach.cosmicreach.blocks.Block;
@@ -13,7 +13,7 @@ import me.nabdev.physicsmod.items.MysticalGem;
 import me.nabdev.physicsmod.items.PhysicsInfuser;
 
 @SuppressWarnings("unused")
-public class PhysicsClientPostInitializer implements ClientPostModInitializer {
+public class PhysicsPostInitializer implements PostModInitializer {
     public static Tag cheeseTag = Tag.of("cheese");
 
     @Override

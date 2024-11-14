@@ -1,16 +1,15 @@
 package me.nabdev.physicsmod.utils;
 
 import com.badlogic.gdx.math.Quaternion;
-import com.badlogic.gdx.math.collision.BoundingBox;
+import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
 import com.jme3.bullet.objects.PhysicsRigidBody;
 import finalforeach.cosmicreach.entities.EntityUniqueId;
 import finalforeach.cosmicreach.entities.player.Player;
+import finalforeach.cosmicreach.world.Zone;
 
 public interface IPhysicsEntity {
     PhysicsRigidBody getBody();
-
-    BoundingBox getBoundingBox();
 
     Quaternion getRotation();
 
@@ -23,7 +22,7 @@ public interface IPhysicsEntity {
 
     void forceActivate();
 
-    default void linkWith(IPhysicsEntity entity) {
+    default void linkWith(EntityUniqueId entity) {
     }
 
     default Array<IPhysicsEntity> getLinkedEntities() {
@@ -33,4 +32,8 @@ public interface IPhysicsEntity {
     void kill();
 
     EntityUniqueId getID();
+
+    Zone getZone();
+
+    Vector3 getPosition();
 }

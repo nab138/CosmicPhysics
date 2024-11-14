@@ -51,6 +51,8 @@ public class PhysicsWorld {
 
     public static MagnetPacket magnetPacket = new MagnetPacket();
 
+    private static int ticksSinceIgnoreUse = 0;
+
     static {
         GameSingletons.updateObservers.add(PhysicsWorld::tick);
     }
@@ -225,12 +227,5 @@ public class PhysicsWorld {
         for (IPhysicsEntity entity : allObjects) {
             entity.forceActivate();
         }
-    }
-
-    public static IPhysicsEntity getEntityById(int id) {
-//        for (IPhysicsEntity entity : allObjects) {
-//            if (entity.getID() == id) return entity;
-//        }
-        return null;
     }
 }

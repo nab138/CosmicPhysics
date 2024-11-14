@@ -8,12 +8,11 @@
     "nab138"
   ],
   "entrypoints": {
-    "preInit": [],
     "init": [
       "me.nabdev.physicsmod.PhysicsMod"
     ],
-    "client_postInit": [
-      "me.nabdev.physicsmod.PhysicsClientPostInitializer"
+    "postInit": [
+      "me.nabdev.physicsmod.PhysicsPostInitializer"
     ]
   },
   "mixins": [

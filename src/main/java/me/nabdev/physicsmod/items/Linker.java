@@ -1,5 +1,6 @@
 package me.nabdev.physicsmod.items;
 
+import com.github.puzzle.core.loader.meta.EnvType;
 import com.github.puzzle.game.items.IModItem;
 import com.github.puzzle.game.items.data.DataTagManifest;
 import com.jme3.bullet.RotationOrder;
@@ -7,6 +8,7 @@ import com.jme3.bullet.joints.New6Dof;
 import com.jme3.bullet.objects.PhysicsRigidBody;
 import com.jme3.math.Matrix3f;
 import com.jme3.math.Vector3f;
+import finalforeach.cosmicreach.networking.server.ServerSingletons;
 import finalforeach.cosmicreach.util.Identifier;
 import me.nabdev.physicsmod.Constants;
 import me.nabdev.physicsmod.utils.IPhysicsEntity;
@@ -26,6 +28,8 @@ public class Linker implements IModItem {
     public static IPhysicsEntity entityTwo = null;
 
     public static final HashMap<IPhysicsEntity, ArrayList<LinkData>> links = new HashMap<>();
+
+    private static final LinkCubePacket linkCubePacket = new LinkCubePacket();
 
 
     public Linker() {
@@ -50,7 +54,11 @@ public class Linker implements IModItem {
         }
 
         link(entityOne, entityTwo);
-        entityOne.linkWith(entityTwo);
+        entityOne.linkWith(entityTwo.getID());
+        if(com.github.puzzle.core.Constants.SIDE == EnvType.SERVER){
+            linkCubePacket.setLinkData(entityOne.getID(), entityTwo.getID(), entityOne.getZone().zoneId);
+            ServerSingletons.SERVER.broadcast(entityOne.getZone(), linkCubePacket);
+        }
 
         entityOne = null;
         entityTwo = null;

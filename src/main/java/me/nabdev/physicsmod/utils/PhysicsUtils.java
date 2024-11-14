@@ -57,11 +57,11 @@ public class PhysicsUtils {
     public static void applyQueuedLinks() {
         if (queuedLinks.isEmpty()) return;
         for (QueuedLink link : queuedLinks) {
-            IPhysicsEntity a = link.e;
-            IPhysicsEntity b = PhysicsWorld.getEntityById(link.id);
-            if (b == null) continue;
-            //Linker.link(a, b);
-            a.linkWith(b);
+//            IPhysicsEntity a = link.e;
+//            IPhysicsEntity b = PhysicsWorld.getEntityById(link.id);
+//            if (b == null) continue;
+//            Linker.link(a, b);
+//            a.linkWith(b.getID());
         }
         queuedLinks.clear();
     }
