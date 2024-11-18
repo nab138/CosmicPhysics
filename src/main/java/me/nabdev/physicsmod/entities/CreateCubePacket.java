@@ -6,6 +6,7 @@ import finalforeach.cosmicreach.GameSingletons;
 import finalforeach.cosmicreach.blocks.Block;
 import finalforeach.cosmicreach.blocks.BlockPosition;
 import finalforeach.cosmicreach.blocks.BlockState;
+import finalforeach.cosmicreach.blocks.MissingBlockStateResult;
 import finalforeach.cosmicreach.networking.GamePacket;
 import finalforeach.cosmicreach.networking.NetworkIdentity;
 import finalforeach.cosmicreach.networking.NetworkSide;
@@ -29,7 +30,7 @@ public class CreateCubePacket extends GamePacket {
     public void receive(ByteBuf in) {
         this.zone = GameSingletons.world.getZoneCreateIfNull(this.readString(in));
         blockPos = this.readBlockPosition(in, zone);
-        blockState = BlockState.getInstance(this.readString(in));
+        blockState = BlockState.getInstance(this.readString(in), MissingBlockStateResult.MISSING_OBJECT);
     }
 
     @Override

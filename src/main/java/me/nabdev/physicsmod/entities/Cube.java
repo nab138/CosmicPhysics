@@ -12,6 +12,7 @@ import finalforeach.cosmicreach.GameSingletons;
 import finalforeach.cosmicreach.TickRunner;
 import finalforeach.cosmicreach.blocks.Block;
 import finalforeach.cosmicreach.blocks.BlockState;
+import finalforeach.cosmicreach.blocks.MissingBlockStateResult;
 import finalforeach.cosmicreach.entities.Entity;
 import finalforeach.cosmicreach.entities.EntityUniqueId;
 import finalforeach.cosmicreach.entities.player.Player;
@@ -50,6 +51,8 @@ public class Cube extends Entity implements IPhysicsEntity {
 
     private IEntityModelInstance ropeModel = null;
 
+    int updateCount;
+
 
     public Cube(Vector3f pos, BlockState blockState) {
         super(id.toString());
@@ -75,7 +78,7 @@ public class Cube extends Entity implements IPhysicsEntity {
         this.localBoundingBox.min.set(-0.5F, -0.5F, -0.5F);
         this.localBoundingBox.max.set(0.5F, 0.5F, 0.5F);
         this.localBoundingBox.update();
-        blockState = BlockState.getInstance(deserialize.readString("blockID"));
+        blockState = BlockState.getInstance(deserialize.readString("blockID"), MissingBlockStateResult.MISSING_OBJECT);
         //setTexture(TextureUtils.getTextureForBlock(blockState));
         body.setPhysicsLocation(new Vector3f(position.x, position.y, position.z));
         float[] rot = deserialize.readFloatArray("rotation");
@@ -134,6 +137,9 @@ public class Cube extends Entity implements IPhysicsEntity {
         this.lastViewDirection.set(this.viewDirection);
 
         lastRotation.set(rotation);
+        lastPosition.set(position);
+
+        if(updateCount < 3) updateCount++;
     }
 
     @Override
@@ -159,38 +165,17 @@ public class Cube extends Entity implements IPhysicsEntity {
             // Place the entity directly between the two linked entities
             Vector3 linkedPos = linkedEntity.getPosition();
             Vector3 avgPos = position.cpy().add(linkedPos).scl(0.5f);
+            Vector3 direction = linkedPos.cpy().sub(position).nor();
+            float distance = position.dst(linkedPos);
+
+            Quaternion rotation = new Quaternion().setFromCross(Vector3.Z, direction);
 
             tmpModelMatrix.idt();
             tmpModelMatrix.translate(avgPos);
-
-            // Calculate the direction vector and length
-            Vector3 dir = linkedPos.sub(position);
-            float length = dir.len();
-            dir = dir.nor();
-            Quaternion rotation = new Quaternion();
-            Vector3 forward = new Vector3(0, 0, 1);
-
-            // Calculate the axis of rotation
-            Vector3 axis = forward.cpy().crs(new Vector3(dir.x, dir.y, dir.z)).nor();
-
-            // Calculate the angle of rotation
-            float angle = angleBetween(forward, new Vector3(dir.x, dir.y, dir.z));
-
-            // Set the rotation quaternion from the axis and angle
-            if (axis.isZero()) {
-                // Handle the case where the direction is directly forward or backward
-                if (forward.dot(new Vector3(dir.x, dir.y, dir.z)) < 0) {
-                    rotation.setFromAxisRad(Vector3.X, (float) Math.PI);
-                }
-            } else {
-                rotation.setFromAxisRad(axis, angle);
-            }
-
-            // Apply the rotation to the matrix
             tmpModelMatrix.rotate(rotation);
-            //tmpModelMatrix.translate(-0.5f, -0.5f, -0.5f);
-            tmpModelMatrix.scale(0.2f, 0.2f, length);
-            tmpModelMatrix.translate(-.1f, -.1f, -length / 2);
+            tmpModelMatrix.scale(0.2f, 0.2f, distance);
+            tmpModelMatrix.translate(0, 0, -0.5f);
+
 
             if(ropeModel == null){
                 ropeModel = GameSingletons.itemEntityModelLoader.load(new ItemStack(Block.getInstance("metal_panel").getDefaultBlockState().getItem()));
@@ -201,6 +186,7 @@ public class Cube extends Entity implements IPhysicsEntity {
 
     @Override
     public void onUseInteraction(Player player, ItemStack heldItemStack) {
+        if(updateCount < 2) return;
         if (heldItemStack == null) return;
         if (heldItemStack.getItem().getID().equals(GravityGun.id.toString())) {
             if (magnetPlayer != null) {
@@ -261,7 +247,7 @@ public class Cube extends Entity implements IPhysicsEntity {
 
     @Override
     public void onDeath() {
-        //Linker.clearLinksFor(this);
+        Linker.clearLinksFor(this);
         PhysicsWorld.removeCube(this);
         if (zone != null) super.onDeath();
     }
@@ -292,10 +278,6 @@ public class Cube extends Entity implements IPhysicsEntity {
 
         BlockUtil.setBlockAt(currentZone, blockState, new Vector3((float) Math.floor(position.x), (float) Math.floor(position.y), (float) Math.floor(position.z)));
         kill();
-    }
-
-    public static float angleBetween(Vector3 a, Vector3 b) {
-        return (float) Math.acos(a.dot(b) / (a.len() * b.len()));
     }
 
     @Override
