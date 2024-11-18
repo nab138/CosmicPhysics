@@ -3,6 +3,7 @@ package me.nabdev.physicsmod.entities;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.math.Quaternion;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.math.collision.BoundingBox;
 import com.badlogic.gdx.utils.Array;
 import com.github.puzzle.game.util.BlockUtil;
 import com.jme3.bullet.collision.shapes.BoxCollisionShape;
@@ -298,6 +299,13 @@ public class Cube extends Entity implements IPhysicsEntity {
     @Override
     public Vector3 getPosition() {
         return position;
+    }
+
+    @Override
+    public BoundingBox getBoundingBox() {
+        BoundingBox box = new BoundingBox();
+        getBoundingBox(box);
+        return box;
     }
 
     @SuppressWarnings("unused")

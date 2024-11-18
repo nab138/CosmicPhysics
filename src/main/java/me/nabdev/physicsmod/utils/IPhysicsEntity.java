@@ -2,6 +2,7 @@ package me.nabdev.physicsmod.utils;
 
 import com.badlogic.gdx.math.Quaternion;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.math.collision.BoundingBox;
 import com.badlogic.gdx.utils.Array;
 import com.jme3.bullet.objects.PhysicsRigidBody;
 import finalforeach.cosmicreach.entities.EntityUniqueId;
@@ -36,4 +37,6 @@ public interface IPhysicsEntity {
     Zone getZone();
 
     Vector3 getPosition();
+
+    BoundingBox getBoundingBox();
 }

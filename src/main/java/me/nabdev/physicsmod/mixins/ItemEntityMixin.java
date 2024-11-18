@@ -4,6 +4,7 @@ import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Quaternion;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.math.collision.BoundingBox;
 import com.jme3.bullet.collision.shapes.BoxCollisionShape;
 import com.jme3.bullet.objects.PhysicsRigidBody;
 import com.jme3.math.Vector3f;
@@ -306,5 +307,11 @@ public abstract class ItemEntityMixin extends Entity implements IPhysicsEntity, 
     @Override
     public Zone getZone() {
         return zone;
+    }
+
+    @SuppressWarnings("all")
+    @Override
+    public BoundingBox getBoundingBox() {
+        return globalBoundingBox;
     }
 }

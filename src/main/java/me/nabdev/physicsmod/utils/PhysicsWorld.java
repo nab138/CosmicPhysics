@@ -51,8 +51,6 @@ public class PhysicsWorld {
 
     public static MagnetPacket magnetPacket = new MagnetPacket();
 
-    private static int ticksSinceIgnoreUse = 0;
-
     static {
         GameSingletons.updateObservers.add(PhysicsWorld::tick);
     }
