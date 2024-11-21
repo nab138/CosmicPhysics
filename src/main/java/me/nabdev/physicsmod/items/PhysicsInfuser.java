@@ -76,4 +76,5 @@ public class PhysicsInfuser implements IModItem {
     public String getName() {
         return "Physics Infuser";
     }
+
 }

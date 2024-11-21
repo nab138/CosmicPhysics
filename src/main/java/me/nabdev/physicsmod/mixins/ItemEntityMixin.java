@@ -314,4 +314,14 @@ public abstract class ItemEntityMixin extends Entity implements IPhysicsEntity, 
     public BoundingBox getBoundingBox() {
         return globalBoundingBox;
     }
+
+    @SuppressWarnings("all")
+    public void scale(Vector3 scale){
+
+    }
+
+    @SuppressWarnings("all")
+    public Vector3 getScale(){
+        return new Vector3(1, 1, 1);
+    }
 }

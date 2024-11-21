@@ -214,9 +214,6 @@ public class PhysicsWorld {
         } else {
             chunkData.body.setCollisionShape(chunkShape);
         }
-        for (Cube cube : cubes) {
-            cube.setMass(2.5f);
-        }
     }
 
     public static void invalidateChunk(Chunk chunk) {

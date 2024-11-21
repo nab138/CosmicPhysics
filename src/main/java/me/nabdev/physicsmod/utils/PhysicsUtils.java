@@ -34,14 +34,16 @@ public class PhysicsUtils {
         return new Vector3f(v.x, v.y, v.z);
     }
 
-    public static void createBlockAt(Vector3 pos, BlockState state, Zone zone) {
+    public static Vector3 v3fToV3(Vector3f v) {
+        return new Vector3(v.x, v.y, v.z);
+    }
+
+    public static Cube createBlockAt(Vector3 pos, BlockState state, Zone zone) {
         PhysicsWorld.initialize();
-        if (isEmpty(state)) return;
-        //Texture stitchedTexture = TextureUtils.getTextureForBlock(state);
+        if (isEmpty(state)) return null;
         Cube e = new Cube(new Vector3f(pos.x, pos.y, pos.z), state);
         zone.addEntity(e);
-        //e.setTexture(stitchedTexture);
-        e.setMass(0);
+        return e;
     }
 
     public static boolean isEmpty(BlockState b) {

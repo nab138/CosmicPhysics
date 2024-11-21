@@ -39,4 +39,7 @@ public interface IPhysicsEntity {
     Vector3 getPosition();
 
     BoundingBox getBoundingBox();
+
+    Vector3 getScale();
+    void scale(Vector3 scale);
 }

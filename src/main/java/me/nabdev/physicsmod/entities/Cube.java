@@ -48,7 +48,7 @@ public class Cube extends Entity implements IPhysicsEntity {
 
     private Vector3f scale = new Vector3f(1, 1, 1);
 
-    private static final EntityRenderRotationPacket rotationPacket = new EntityRenderRotationPacket();
+    private static final EntityRenderRotationScalePacket rotationPacket = new EntityRenderRotationScalePacket();
 
     private IEntityModelInstance ropeModel = null;
 
@@ -157,7 +157,7 @@ public class Cube extends Entity implements IPhysicsEntity {
             tmpModelMatrix.translate(tmpRenderPos);
             tmpModelMatrix.rotate(rotation);
             tmpModelMatrix.scale(scale.x, scale.y, scale.z);
-            tmpModelMatrix.translate(-scale.x / 2, -scale.y / 2, -scale.z / 2);
+            tmpModelMatrix.translate(-0.5f, -0.5f, -0.5f);
 
             this.modelInstance.render(this, camera, tmpModelMatrix);
         }
@@ -309,8 +309,19 @@ public class Cube extends Entity implements IPhysicsEntity {
     }
 
     @SuppressWarnings("unused")
-    public void scale(Vector3f scale){
-        body.setPhysicsScale(scale);
-        this.scale = scale;
+    public void scale(Vector3 scale){
+        if(scale.equals(getScale())) return;
+        Vector3f scaleF = PhysicsUtils.v3ToV3f(scale);
+        body.setPhysicsScale(scaleF);
+        this.scale = scaleF;
+        this.localBoundingBox.min.set(-scale.x/2, -scale.y/2, -scale.z/2);
+        this.localBoundingBox.max.set(scale.x/2, scale.y/2, scale.z/2);
+        this.localBoundingBox.update();
+        getBoundingBox(this.globalBoundingBox);
+    }
+
+    @SuppressWarnings("unused")
+    public Vector3 getScale(){
+        return PhysicsUtils.v3fToV3(scale);
     }
 }
