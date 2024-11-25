@@ -324,4 +324,8 @@ public class Cube extends Entity implements IPhysicsEntity {
     public Vector3 getScale(){
         return PhysicsUtils.v3fToV3(scale);
     }
+
+    public void setPhysicsLocation(Vector3f pos){
+        body.setPhysicsLocation(pos);
+    }
 }
