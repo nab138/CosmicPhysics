@@ -6,7 +6,7 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.BoundingBox;
 import com.badlogic.gdx.utils.Array;
 import com.github.puzzle.game.util.BlockUtil;
-import com.jme3.bullet.collision.shapes.BoxCollisionShape;
+import com.jme3.bullet.collision.shapes.CompoundCollisionShape;
 import com.jme3.bullet.objects.PhysicsRigidBody;
 import com.jme3.math.Vector3f;
 import finalforeach.cosmicreach.GameSingletons;
@@ -61,9 +61,9 @@ public class Cube extends Entity implements IPhysicsEntity {
         this.hasGravity = false;
         this.blockState = blockState;
 
-        BoxCollisionShape boxShape = new BoxCollisionShape(new Vector3f(0.5f, 0.5f, 0.5f));
+
         setPosition(pos.x, pos.y, pos.z);
-        body = new PhysicsRigidBody(boxShape, mass);
+        body = new PhysicsRigidBody(getCollisionMesh(), mass);
         body.setPhysicsLocation(pos);
         body.setFriction(1f);
 
@@ -74,13 +74,17 @@ public class Cube extends Entity implements IPhysicsEntity {
         this(new Vector3f(0f,0f,0f), Block.getInstance("cheese").getDefaultBlockState());
     }
 
+    private CompoundCollisionShape getCollisionMesh(){
+        return PhysicsUtils.getCollisionMeshForBlock(blockState);
+    }
+
     public void read(CRBinDeserializer deserialize) {
         super.read(deserialize);
         this.localBoundingBox.min.set(-0.5F, -0.5F, -0.5F);
         this.localBoundingBox.max.set(0.5F, 0.5F, 0.5F);
         this.localBoundingBox.update();
         blockState = BlockState.getInstance(deserialize.readString("blockID"), MissingBlockStateResult.MISSING_OBJECT);
-        //setTexture(TextureUtils.getTextureForBlock(blockState));
+        body.setCollisionShape(getCollisionMesh());
         body.setPhysicsLocation(new Vector3f(position.x, position.y, position.z));
         float[] rot = deserialize.readFloatArray("rotation");
         rotation = new Quaternion(rot[0], rot[1], rot[2], rot[3]);
@@ -147,6 +151,7 @@ public class Cube extends Entity implements IPhysicsEntity {
     public void render(Camera camera) {
         if (this.modelInstance == null && this.blockState != null) {
             this.modelInstance = GameSingletons.itemEntityModelLoader.load(new ItemStack(blockState.getItem()));
+
         }
         tmpRenderPos.set(this.lastRenderPosition);
         TickRunner.INSTANCE.partTickLerp(tmpRenderPos, this.position);
@@ -251,12 +256,6 @@ public class Cube extends Entity implements IPhysicsEntity {
         Linker.clearLinksFor(this);
         PhysicsWorld.removeCube(this);
         if (zone != null) super.onDeath();
-    }
-
-    public void setMass(float mass) {
-        if (mass == this.mass || mass < 0) return;
-        this.mass = mass;
-        body.setMass(mass);
     }
 
     @Override

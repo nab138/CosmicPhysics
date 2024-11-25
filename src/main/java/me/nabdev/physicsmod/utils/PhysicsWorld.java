@@ -1,6 +1,7 @@
 package me.nabdev.physicsmod.utils;
 
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.math.collision.BoundingBox;
 import com.badlogic.gdx.utils.Array;
 import com.jme3.bullet.PhysicsSpace;
 import com.jme3.bullet.collision.shapes.BoxCollisionShape;
@@ -198,8 +199,14 @@ public class PhysicsWorld {
                     BlockState state = blockData.getBlockValue(x, y, z);
                     if (isEmpty(state)) continue;
                     Vector3 pos = new Vector3(x, y, z);
-                    BoxCollisionShape boxShape = new BoxCollisionShape(new Vector3f(0.5f, 0.5f, 0.5f));
-                    chunkShape.addChildShape(boxShape, new Vector3f(pos.x + 0.5f, pos.y + 0.5f, pos.z + 0.5f));
+                    Array<BoundingBox> boxes = new Array<>();
+                    state.getModel().getAllBoundingBoxes(boxes, 0, 0, 0);
+                    boxes.forEach(box -> {
+                        Vector3f halfExtents = new Vector3f((box.max.x - box.min.x) / 2, (box.max.y - box.min.y) / 2, (box.max.z - box.min.z) / 2);
+                        Vector3f center = new Vector3f(box.getCenterX(), box.getCenterY(), box.getCenterZ());
+                        BoxCollisionShape boxShape = new BoxCollisionShape(halfExtents);
+                        chunkShape.addChildShape(boxShape, center.add(PhysicsUtils.v3ToV3f(pos)));
+                    });
                 }
             }
         }

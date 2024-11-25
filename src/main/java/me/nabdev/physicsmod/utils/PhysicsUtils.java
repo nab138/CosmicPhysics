@@ -2,6 +2,10 @@ package me.nabdev.physicsmod.utils;
 
 import com.badlogic.gdx.math.Quaternion;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.math.collision.BoundingBox;
+import com.badlogic.gdx.utils.Array;
+import com.jme3.bullet.collision.shapes.BoxCollisionShape;
+import com.jme3.bullet.collision.shapes.CompoundCollisionShape;
 import com.jme3.bullet.objects.PhysicsRigidBody;
 import com.jme3.math.Vector3f;
 import finalforeach.cosmicreach.blocks.BlockState;
@@ -74,5 +78,18 @@ public class PhysicsUtils {
 
     public static boolean epsilonEquals(Quaternion a, Quaternion b) {
         return epsilonEquals(a, b, 0.0001f);
+    }
+
+    public static CompoundCollisionShape getCollisionMeshForBlock(BlockState blockState) {
+        Array<BoundingBox> boxes = new Array<>();
+        blockState.getModel().getAllBoundingBoxes(boxes, 0, 0, 0);
+        CompoundCollisionShape compoundShape = new CompoundCollisionShape();
+        boxes.forEach(box -> {
+            Vector3f halfExtents = new Vector3f((box.max.x - box.min.x) / 2, (box.max.y - box.min.y) / 2, (box.max.z - box.min.z) / 2);
+            Vector3f center = new Vector3f(box.getCenterX() - 0.5f, box.getCenterY() - 0.5f, box.getCenterZ() - 0.5f);
+            BoxCollisionShape boxShape = new BoxCollisionShape(halfExtents);
+            compoundShape.addChildShape(boxShape, center);
+        });
+        return compoundShape;
     }
 }
