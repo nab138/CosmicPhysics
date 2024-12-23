@@ -41,7 +41,7 @@ public class Cube extends Entity implements IPhysicsEntity {
     public Player magnetPlayer = null;
     public float mass = 2.5f;
 
-    private BlockState blockState;
+    public BlockState blockState;
     private Zone currentZone = null;
 
     private final Array<IPhysicsEntity> linkedEntities = new Array<>(false, 0, IPhysicsEntity.class);
@@ -65,7 +65,8 @@ public class Cube extends Entity implements IPhysicsEntity {
         setPosition(pos.x, pos.y, pos.z);
         body = new PhysicsRigidBody(getCollisionMesh(), mass);
         body.setPhysicsLocation(pos);
-        body.setFriction(1f);
+        body.setFriction((float)frictionInterpolation(blockState.friction));
+        System.out.println(frictionInterpolation(blockState.friction));
 
         PhysicsWorld.addCube(this);
     }
@@ -85,6 +86,7 @@ public class Cube extends Entity implements IPhysicsEntity {
         this.localBoundingBox.update();
         blockState = BlockState.getInstance(deserialize.readString("blockID"), MissingBlockStateResult.MISSING_OBJECT);
         body.setCollisionShape(getCollisionMesh());
+        body.setFriction((float)frictionInterpolation(blockState.friction));
         body.setPhysicsLocation(new Vector3f(position.x, position.y, position.z));
         float[] rot = deserialize.readFloatArray("rotation");
         rotation = new Quaternion(rot[0], rot[1], rot[2], rot[3]);
@@ -322,5 +324,16 @@ public class Cube extends Entity implements IPhysicsEntity {
     @SuppressWarnings("unused")
     public Vector3 getScale(){
         return PhysicsUtils.v3fToV3(scale);
+    }
+
+    public static double frictionInterpolation(double x){
+        if(x <= 0.001) return 0.0;
+        if (x < 1) {
+            // Exponential interpolation for x < 1
+            return Math.exp(200 * (x - 1));
+        } else {
+            // Linear function for x >= 1
+            return x;
+        }
     }
 }

@@ -22,18 +22,15 @@ import me.nabdev.physicsmod.items.GravityGun;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static me.nabdev.physicsmod.utils.PhysicsUtils.isEmpty;
 
 public class PhysicsWorld {
     private static class ChunkBodyData {
-        public PhysicsRigidBody body;
-        public boolean isValid;
-
-        public ChunkBodyData() {
-            this.body = null;
-            this.isValid = false;
-        }
+        public PhysicsRigidBody body = null;
+        public PhysicsRigidBody iceBody = null;
+        public boolean isValid = false;
     }
 
     public static final ArrayList<IPhysicsEntity> allObjects = new ArrayList<>();
@@ -51,6 +48,8 @@ public class PhysicsWorld {
     public static HashMap<Player, IPhysicsEntity> queuedMagnetEntities = new HashMap<>();
 
     public static MagnetPacket magnetPacket = new MagnetPacket();
+
+    public static float iceFriction = (float)Cube.frictionInterpolation(Block.getInstance("ice").getDefaultBlockState().friction) * 0.5f;
 
     static {
         GameSingletons.updateObservers.add(PhysicsWorld::tick);
@@ -193,6 +192,8 @@ public class PhysicsWorld {
             return;
 
         CompoundCollisionShape chunkShape = new CompoundCollisionShape();
+        CompoundCollisionShape iceShape = new CompoundCollisionShape();
+        AtomicBoolean hasIce = new AtomicBoolean(false);
         for (int x = 0; x < 16; x++) {
             for (int y = 0; y < 16; y++) {
                 for (int z = 0; z < 16; z++) {
@@ -205,7 +206,12 @@ public class PhysicsWorld {
                         Vector3f halfExtents = new Vector3f((box.max.x - box.min.x) / 2, (box.max.y - box.min.y) / 2, (box.max.z - box.min.z) / 2);
                         Vector3f center = new Vector3f(box.getCenterX(), box.getCenterY(), box.getCenterZ());
                         BoxCollisionShape boxShape = new BoxCollisionShape(halfExtents);
-                        chunkShape.addChildShape(boxShape, center.add(PhysicsUtils.v3ToV3f(pos)));
+
+                        if(state.friction >=1) chunkShape.addChildShape(boxShape, center.add(PhysicsUtils.v3ToV3f(pos)));
+                        else {
+                            iceShape.addChildShape(boxShape, center.add(PhysicsUtils.v3ToV3f(pos)));
+                            hasIce.set(true);
+                        }
                     });
                 }
             }
@@ -214,12 +220,37 @@ public class PhysicsWorld {
         chunkData.isValid = true;
         if (!seenBefore) {
             PhysicsRigidBody body = new PhysicsRigidBody(chunkShape, 0);
+            body.setFriction(0.7f);
             body.setPhysicsLocation(new Vector3f(chunk.getBlockX(), chunk.getBlockY(), chunk.getBlockZ()));
             addRigidBody(body);
             chunkData.body = body;
+
+
+            if (hasIce.get()) {
+                PhysicsRigidBody iceBody = new PhysicsRigidBody(iceShape, 0);
+                iceBody.setPhysicsLocation(new Vector3f(chunk.getBlockX(), chunk.getBlockY(), chunk.getBlockZ()));
+                iceBody.setFriction(iceFriction);
+                addRigidBody(iceBody);
+                chunkData.iceBody = iceBody;
+            }
+
             chunkBodies.put(chunk, chunkData);
         } else {
             chunkData.body.setCollisionShape(chunkShape);
+            if (hasIce.get()) {
+                if(chunkData.iceBody != null) {
+                    chunkData.iceBody.setCollisionShape(iceShape);
+                } else {
+                    PhysicsRigidBody iceBody = new PhysicsRigidBody(iceShape, 0);
+                    iceBody.setPhysicsLocation(new Vector3f(chunk.getBlockX(), chunk.getBlockY(), chunk.getBlockZ()));
+                    iceBody.setFriction(iceFriction);
+                    addRigidBody(iceBody);
+                    chunkData.iceBody = iceBody;
+                }
+            } else if (chunkData.iceBody != null) {
+                space.removeCollisionObject(chunkData.iceBody);
+                chunkData.iceBody = null;
+            }
         }
     }
 

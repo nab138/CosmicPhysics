@@ -27,6 +27,7 @@ dependencies {
     bundle("com.github.stephengold:Libbulletjme:21.2.1")
     bundle("commons-io:commons-io:2.16.1")
 
+
     cosmicReach("finalforeach:cosmicreach:${cosmic_reach_version}")
 }
 

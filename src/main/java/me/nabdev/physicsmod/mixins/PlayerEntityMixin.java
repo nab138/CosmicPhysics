@@ -6,22 +6,62 @@ import com.badlogic.gdx.math.collision.BoundingBox;
 import com.badlogic.gdx.utils.Array;
 import finalforeach.cosmicreach.blocks.BlockState;
 import finalforeach.cosmicreach.entities.Entity;
-import finalforeach.cosmicreach.entities.player.PlayerEntity;
 import finalforeach.cosmicreach.util.Axis;
 import finalforeach.cosmicreach.world.Zone;
 import me.nabdev.physicsmod.entities.Cube;
 import me.nabdev.physicsmod.utils.PhysicsWorld;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Overwrite;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 
-@Mixin(PlayerEntity.class)
-public class PlayerEntityMixin extends Entity {
-    public PlayerEntityMixin(String entityTypeId) {
-        super(entityTypeId);
-    }
+@Mixin(Entity.class)
+public class PlayerEntityMixin{
+    @Shadow
+    public Vector3 velocity;
+    @Shadow
+    public Vector3 onceVelocity;
+    @Shadow
+    public BoundingBox tmpEntityBoundingBox;
+    @Shadow
+    public BoundingBox tmpBlockBoundingBox;
+    @Shadow
+    public boolean collidedX;
+    @Shadow
+    public boolean collidedZ;
+    @Shadow
+    public boolean isOnGround;
+    @Shadow
+    public float footstepTimer;
+    @Shadow
+    private float floorFriction;
+    @Shadow
+    public float maxStepHeight;
+    @Shadow
+    public Vector3 position;
+    @Shadow
+    public BoundingBox localBoundingBox;
+    @Shadow
+    public BoundingBox tmpEntityBoundingBox2;
+    @Shadow
+    public BoundingBox tmpBlockBoundingBox2;
+    @Shadow
+    public Array<BoundingBox> tmpBlockBoundingBoxes;
+    @Shadow
+    public void onCollideWithBlock(Axis axis, BlockState block, int bx, int by, int bz) {}
+    @Shadow
+    public boolean shouldConstrainBySneak(Zone zone, BoundingBox blockBB, BoundingBox entityBB, int minBx, int minBy, int minBz, int maxBx, int maxBz) { return false; }
+    @Shadow
+    public boolean isInFluid() { return false; }
 
-    @Override
+
+    /**
+     * @author nab138
+     * @reason Mixin Extras is broken so cant do local var modification
+     */
+    @Overwrite
     public void updateConstraints(Zone zone, Vector3 targetPosition) {
+        float floorFriction = 0.0F;
         this.tmpEntityBoundingBox.set(this.localBoundingBox);
         this.tmpEntityBoundingBox.min.add(this.position);
         this.tmpEntityBoundingBox.max.add(this.position);
@@ -40,7 +80,6 @@ public class PlayerEntityMixin extends Entity {
 
         for(int bx = minBx; bx <= maxBx; ++bx) {
             for(int by = minBy; by <= maxBy; ++by) {
-                label316:
                 for(int bz = minBz; bz <= maxBz; ++bz) {
                     BlockState blockAdj = zone.getBlockState(bx, by, bz);
                     if (blockAdj != null && !blockAdj.walkThrough) {
@@ -48,39 +87,34 @@ public class PlayerEntityMixin extends Entity {
                         if (this.tmpBlockBoundingBox.intersects(this.tmpEntityBoundingBox)) {
                             blockAdj.getAllBoundingBoxes(this.tmpBlockBoundingBoxes, bx, by, bz);
                             float oldY = this.tmpEntityBoundingBox.min.y;
-                            Array.ArrayIterator<BoundingBox> var17 = this.tmpBlockBoundingBoxes.iterator();
 
-                            while(true) {
-                                BoundingBox bb;
-                                do {
-                                    if (!var17.hasNext()) {
-                                        continue label316;
+                            for (BoundingBox bb : this.tmpBlockBoundingBoxes) {
+                                if (bb.intersects(this.tmpEntityBoundingBox)) {
+                                    this.velocity.y = 0.0F;
+                                    this.onceVelocity.y = 0.0F;
+                                    if (oldY <= bb.max.y && oldY >= bb.min.y) {
+                                        minPosY = Math.max(minPosY, bb.max.y - this.localBoundingBox.min.y);
+                                        maxPosY = Math.max(maxPosY, minPosY);
+                                        if (!this.isOnGround) {
+                                            this.footstepTimer = 0.45F;
+                                        }
+
+                                        isOnGround = true;
+                                        floorFriction = Math.max(floorFriction, blockAdj.friction);
+                                    } else {
+                                        maxPosY = Math.min(maxPosY, bb.min.y - this.localBoundingBox.getHeight() - 0.01F);
                                     }
 
-                                    bb = var17.next();
-                                } while(!bb.intersects(this.tmpEntityBoundingBox));
-
-                                this.velocity.y = 0.0F;
-                                this.onceVelocity.y = 0.0F;
-                                if (oldY <= bb.max.y && oldY >= bb.min.y) {
-                                    minPosY = Math.max(minPosY, bb.max.y - this.localBoundingBox.min.y);
-                                    maxPosY = Math.max(maxPosY, minPosY);
-                                    if (!this.isOnGround) {
-                                        this.footstepTimer = 0.45F;
-                                    }
-
-                                    isOnGround = true;
-                                } else {
-                                    maxPosY = Math.min(maxPosY, bb.min.y - this.localBoundingBox.getHeight() - 0.01F);
+                                    this.onCollideWithBlock(Axis.Y, blockAdj, bx, by, bz);
                                 }
-
-                                this.onCollideWithBlock(Axis.Y, blockAdj, bx, by, bz);
                             }
                         }
                     }
                 }
             }
         }
+
+
 
         for (Cube cube : PhysicsWorld.cubes) {
             if (cube == null) continue;
@@ -91,12 +125,13 @@ public class PlayerEntityMixin extends Entity {
 
             // Check if the player is above the cube
             if (diff.y >= 0f && diff.y <= cube.localBoundingBox.getHeight() / 2f) {
-                minPosY = Math.max(minPosY, cube.position.y + cube.localBoundingBox.max.y - 0.01f);
-                maxPosY = Math.max(maxPosY, minPosY);
+                minPosY = (Math.max(minPosY, cube.position.y + cube.localBoundingBox.max.y - 0.01f));
+                maxPosY = (Math.max(maxPosY, minPosY));
                 if (!this.isOnGround) {
                     this.footstepTimer = 0.45F;
                 }
                 isOnGround = true;
+                floorFriction = Math.max(floorFriction, cube.blockState.friction);
                 break;
             }
             if (diff.y > -1.6f - cube.localBoundingBox.getHeight() / 2 && diff.y < 0f) {
@@ -106,6 +141,13 @@ public class PlayerEntityMixin extends Entity {
             }
 
         }
+
+        if (isOnGround) {
+            this.floorFriction = floorFriction;
+        } else if (this.isInFluid()) {
+            this.floorFriction = 1.0F;
+        }
+
         targetPosition.y = MathUtils.clamp(targetPosition.y, minPosY, maxPosY);
         this.isOnGround = isOnGround;
         this.tmpEntityBoundingBox.min.x = this.localBoundingBox.min.x + targetPosition.x;
@@ -128,35 +170,19 @@ public class PlayerEntityMixin extends Entity {
 
         this.collidedX = false;
         this.collidedZ = false;
-        //targetPosition.y = MathUtils.clamp(targetPosition.y, minPosY, maxPosY);
         boolean steppedUpForAll = true;
         float desiredStepUp = targetPosition.y;
-        boolean didStepUp;
-        Array.ArrayIterator<BoundingBox> var20;
-        BoundingBox bb;
-        float currentDesiredStepUp;
-        boolean canStepUp;
-        int bax;
-        int bay;
-        int baz;
-        BlockState blockAbove;
-        int bx;
-        int by;
-        int bz;
-        BlockState blockAdj;
         if (!constrainBySneaking) {
-            for(bx = minBx; bx <= maxBx; ++bx) {
-                for(by = minBy; by <= maxBy; ++by) {
-                    for(bz = minBz; bz <= maxBz; ++bz) {
-                        blockAdj = zone.getBlockState(bx, by, bz);
+            for(int bx = minBx; bx <= maxBx; ++bx) {
+                for(int by = minBy; by <= maxBy; ++by) {
+                    for(int bz = minBz; bz <= maxBz; ++bz) {
+                        BlockState blockAdj = zone.getBlockState(bx, by, bz);
                         if (blockAdj != null && !blockAdj.walkThrough) {
                             blockAdj.getBoundingBox(this.tmpBlockBoundingBox, bx, by, bz);
                             if (this.tmpBlockBoundingBox.intersects(this.tmpEntityBoundingBox)) {
-                                didStepUp = false;
-                                var20 = blockAdj.getAllBoundingBoxes(this.tmpBlockBoundingBoxes, bx, by, bz).iterator();
+                                boolean didStepUp = false;
 
-                                while(var20.hasNext()) {
-                                    bb = var20.next();
+                                for (BoundingBox bb : blockAdj.getAllBoundingBoxes(this.tmpBlockBoundingBoxes, bx, by, bz)) {
                                     if (bb.intersects(this.tmpEntityBoundingBox)) {
                                         if (!isOnGround || !(bb.max.y - this.tmpEntityBoundingBox.min.y <= this.maxStepHeight) || !(bb.max.y > this.tmpEntityBoundingBox.min.y)) {
                                             didStepUp = false;
@@ -164,23 +190,23 @@ public class PlayerEntityMixin extends Entity {
                                             break;
                                         }
 
-                                        currentDesiredStepUp = Math.max(desiredStepUp, bb.max.y - this.localBoundingBox.min.y);
+                                        float currentDesiredStepUp = Math.max(desiredStepUp, bb.max.y - this.localBoundingBox.min.y);
                                         this.tmpEntityBoundingBox2.set(this.tmpEntityBoundingBox);
                                         this.tmpEntityBoundingBox2.min.y = currentDesiredStepUp;
                                         this.tmpEntityBoundingBox2.max.y = currentDesiredStepUp + this.localBoundingBox.getHeight();
                                         this.tmpEntityBoundingBox2.update();
-                                        canStepUp = true;
+                                        boolean canStepUp = true;
 
-                                        label264:
-                                        for(bax = minBx; bax <= maxBx; ++bax) {
-                                            for(bay = by + 1; bay <= maxBy + 1; ++bay) {
-                                                for(baz = minBz; baz <= maxBz; ++baz) {
-                                                    blockAbove = zone.getBlockState(bax, bay, baz);
+                                        label271:
+                                        for (int bax = minBx; bax <= maxBx; ++bax) {
+                                            for (int bay = by + 1; bay <= maxBy + 1; ++bay) {
+                                                for (int baz = minBz; baz <= maxBz; ++baz) {
+                                                    BlockState blockAbove = zone.getBlockState(bax, bay, baz);
                                                     if (blockAbove != null && !blockAbove.walkThrough) {
                                                         blockAbove.getBoundingBox(this.tmpBlockBoundingBox2, bax, bay, baz);
                                                         canStepUp = !this.tmpBlockBoundingBox2.intersects(this.tmpEntityBoundingBox2);
                                                         if (!canStepUp) {
-                                                            break label264;
+                                                            break label271;
                                                         }
                                                     }
                                                 }
@@ -195,13 +221,11 @@ public class PlayerEntityMixin extends Entity {
                                 }
 
                                 if (!didStepUp) {
-                                    var20 = blockAdj.getAllBoundingBoxes(this.tmpBlockBoundingBoxes, bx, by, bz).iterator();
 
-                                    while(var20.hasNext()) {
-                                        bb = var20.next();
+                                    for (BoundingBox bb : blockAdj.getAllBoundingBoxes(this.tmpBlockBoundingBoxes, bx, by, bz)) {
                                         if (bb.intersects(this.tmpEntityBoundingBox)) {
-                                            currentDesiredStepUp = this.tmpBlockBoundingBox.getCenterX();
-                                            if (currentDesiredStepUp > targetPosition.x) {
+                                            float centX = this.tmpBlockBoundingBox.getCenterX();
+                                            if (centX > targetPosition.x) {
                                                 targetPosition.x = bb.min.x - this.tmpEntityBoundingBox.getWidth() / 2.0F - 0.01F;
                                             } else {
                                                 targetPosition.x = bb.max.x + this.tmpEntityBoundingBox.getWidth() / 2.0F + 0.01F;
@@ -244,18 +268,16 @@ public class PlayerEntityMixin extends Entity {
         steppedUpForAll = true;
         desiredStepUp = targetPosition.y;
         if (!constrainBySneaking) {
-            for(bx = minBx; bx <= maxBx; ++bx) {
-                for(by = minBy; by <= maxBy; ++by) {
-                    for(bz = minBz; bz <= maxBz; ++bz) {
-                        blockAdj = zone.getBlockState(bx, by, bz);
+            for(int bx = minBx; bx <= maxBx; ++bx) {
+                for(int by = minBy; by <= maxBy; ++by) {
+                    for(int bz = minBz; bz <= maxBz; ++bz) {
+                        BlockState blockAdj = zone.getBlockState(bx, by, bz);
                         if (blockAdj != null && !blockAdj.walkThrough) {
                             blockAdj.getBoundingBox(this.tmpBlockBoundingBox, bx, by, bz);
                             if (this.tmpBlockBoundingBox.intersects(this.tmpEntityBoundingBox)) {
-                                didStepUp = false;
-                                var20 = blockAdj.getAllBoundingBoxes(this.tmpBlockBoundingBoxes, bx, by, bz).iterator();
+                                boolean didStepUp = false;
 
-                                while(var20.hasNext()) {
-                                    bb = var20.next();
+                                for (BoundingBox bb : blockAdj.getAllBoundingBoxes(this.tmpBlockBoundingBoxes, bx, by, bz)) {
                                     if (bb.intersects(this.tmpEntityBoundingBox)) {
                                         if (!isOnGround || !(bb.max.y - this.tmpEntityBoundingBox.min.y <= this.maxStepHeight) || !(bb.max.y > this.tmpEntityBoundingBox.min.y)) {
                                             didStepUp = false;
@@ -263,23 +285,23 @@ public class PlayerEntityMixin extends Entity {
                                             break;
                                         }
 
-                                        currentDesiredStepUp = Math.max(desiredStepUp, bb.max.y - this.localBoundingBox.min.y);
+                                        float currentDesiredStepUp = Math.max(desiredStepUp, bb.max.y - this.localBoundingBox.min.y);
                                         this.tmpEntityBoundingBox2.set(this.tmpEntityBoundingBox);
                                         this.tmpEntityBoundingBox2.min.y = currentDesiredStepUp;
                                         this.tmpEntityBoundingBox2.max.y = currentDesiredStepUp + this.localBoundingBox.getHeight();
                                         this.tmpEntityBoundingBox2.update();
-                                        canStepUp = true;
+                                        boolean canStepUp = true;
 
-                                        label195:
-                                        for(bax = minBx; bax <= maxBx; ++bax) {
-                                            for(bay = by + 1; bay <= maxBy + 1; ++bay) {
-                                                for(baz = minBz; baz <= maxBz; ++baz) {
-                                                    blockAbove = zone.getBlockState(bax, bay, baz);
+                                        label202:
+                                        for (int bax = minBx; bax <= maxBx; ++bax) {
+                                            for (int bay = by + 1; bay <= maxBy + 1; ++bay) {
+                                                for (int baz = minBz; baz <= maxBz; ++baz) {
+                                                    BlockState blockAbove = zone.getBlockState(bax, bay, baz);
                                                     if (blockAbove != null && !blockAbove.walkThrough) {
                                                         blockAbove.getBoundingBox(this.tmpBlockBoundingBox2, bax, bay, baz);
                                                         canStepUp = !this.tmpBlockBoundingBox2.intersects(this.tmpEntityBoundingBox2);
                                                         if (!canStepUp) {
-                                                            break label195;
+                                                            break label202;
                                                         }
                                                     }
                                                 }
@@ -294,13 +316,11 @@ public class PlayerEntityMixin extends Entity {
                                 }
 
                                 if (!didStepUp) {
-                                    var20 = blockAdj.getAllBoundingBoxes(this.tmpBlockBoundingBoxes, bx, by, bz).iterator();
 
-                                    while(var20.hasNext()) {
-                                        bb = var20.next();
+                                    for (BoundingBox bb : blockAdj.getAllBoundingBoxes(this.tmpBlockBoundingBoxes, bx, by, bz)) {
                                         if (bb.intersects(this.tmpEntityBoundingBox)) {
-                                            currentDesiredStepUp = this.tmpBlockBoundingBox.getCenterZ();
-                                            if (currentDesiredStepUp > targetPosition.z) {
+                                            float centZ = this.tmpBlockBoundingBox.getCenterZ();
+                                            if (centZ > targetPosition.z) {
                                                 targetPosition.z = bb.min.z - this.tmpEntityBoundingBox.getDepth() / 2.0F - 0.01F;
                                             } else {
                                                 targetPosition.z = bb.max.z + this.tmpEntityBoundingBox.getDepth() / 2.0F + 0.01F;
@@ -345,7 +365,6 @@ public class PlayerEntityMixin extends Entity {
                     this.velocity.z = 0.0F;
                 }
             }
-
         }
 
         if (steppedUpForAll) {
@@ -354,6 +373,7 @@ public class PlayerEntityMixin extends Entity {
 
         this.position.set(targetPosition.x, targetPosition.y, targetPosition.z);
     }
+
     @Unique
     private void physicsMod$fixPositionX(Vector3 targetPosition) {
         if (this.tmpBlockBoundingBox.getCenterX() > targetPosition.x) {

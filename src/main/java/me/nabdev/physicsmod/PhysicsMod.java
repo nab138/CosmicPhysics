@@ -21,6 +21,7 @@ import java.util.logging.Level;
 public class PhysicsMod implements ModInitializer {
     @Override
     public void onInit() {
+
         IModItem.registerItem(new MysticalGem());
         IModItem.registerItem(new PhysicsInfuser());
         IModItem.registerItem(new GravityGun());
