@@ -66,7 +66,6 @@ public class Cube extends Entity implements IPhysicsEntity {
         body = new PhysicsRigidBody(getCollisionMesh(), mass);
         body.setPhysicsLocation(pos);
         body.setFriction((float)frictionInterpolation(blockState.friction));
-        System.out.println(frictionInterpolation(blockState.friction));
 
         PhysicsWorld.addCube(this);
     }
