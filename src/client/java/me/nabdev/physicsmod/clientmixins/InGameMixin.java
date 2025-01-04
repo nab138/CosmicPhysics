@@ -13,4 +13,14 @@ public class InGameMixin {
     private void unload(CallbackInfo ci) {
         PhysicsWorld.reset();
     }
+
+    @Inject(method = "switchAwayTo", at = @At("HEAD"))
+    private void switchAway(CallbackInfo ci) {
+        PhysicsWorld.paused = true;
+    }
+
+    @Inject(method = "onSwitchTo", at = @At("HEAD"))
+    private void switchTo(CallbackInfo ci) {
+        PhysicsWorld.paused = false;
+    }
 }

@@ -1,14 +1,17 @@
+
 package me.nabdev.physicsmod.utils;
 
-import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.BoundingBox;
 import com.badlogic.gdx.utils.Array;
+import com.github.puzzle.core.loader.util.ModLocator;
 import com.jme3.bullet.PhysicsSpace;
 import com.jme3.bullet.collision.shapes.BoxCollisionShape;
 import com.jme3.bullet.collision.shapes.CompoundCollisionShape;
 import com.jme3.bullet.objects.PhysicsRigidBody;
 import com.jme3.math.Vector3f;
-import finalforeach.cosmicreach.GameSingletons;
+import com.nikrasoff.seamlessportals.SeamlessPortals;
+import com.nikrasoff.seamlessportals.portals.HPGPortal;
+import com.nikrasoff.seamlessportals.portals.Portal;
 import finalforeach.cosmicreach.blocks.Block;
 import finalforeach.cosmicreach.blocks.BlockState;
 import finalforeach.cosmicreach.entities.player.Player;
@@ -27,6 +30,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import static me.nabdev.physicsmod.utils.PhysicsUtils.isEmpty;
 
 public class PhysicsWorld {
+    public static final boolean portalsLoaded = ModLocator.isModLoaded("seamlessportals");
+
+    public static boolean paused = false;
     private static class ChunkBodyData {
         public PhysicsRigidBody body = null;
         public PhysicsRigidBody iceBody = null;
@@ -37,7 +43,6 @@ public class PhysicsWorld {
     public static final ArrayList<Cube> cubes = new ArrayList<>();
     public static PhysicsSpace space;
     public static final HashMap<Integer, String> blocks = new HashMap<>();
-    public static final HashMap<Integer, PhysicsRigidBody> blockBodies = new HashMap<>();
     private static final HashMap<Chunk, ChunkBodyData> chunkBodies = new HashMap<>();
     private static final ArrayList<PhysicsRigidBody> queuedBodies = new ArrayList<>();
     public static HashMap<String, IPhysicsEntity> magnetEntities = new HashMap<>();
@@ -52,8 +57,36 @@ public class PhysicsWorld {
     public static float iceFriction = (float)Cube.frictionInterpolation(Block.getInstance("ice").getDefaultBlockState().friction) * 0.5f;
 
     static {
-        GameSingletons.updateObservers.add(PhysicsWorld::tick);
+
+        Thread physicsThread = new Thread(() -> {
+            final long frameTime = 1_000_000_000 / 100; // 100 updates per second
+            long lastTime = System.nanoTime();
+
+            while (true) {
+                long currentTime = System.nanoTime();
+                long elapsedTime = currentTime - lastTime;
+
+                if (elapsedTime >= frameTime) {
+                    double delta = elapsedTime / 1_000_000_000.0; // Convert nanoseconds to seconds
+                    lastTime = currentTime;
+
+                    if(!paused) PhysicsWorld.tick(delta);
+                } else {
+                    try {
+                        // Sleep to save CPU if the update is ahead of schedule
+                        Thread.sleep((frameTime - elapsedTime) / 1_000_000); // Convert nanoseconds to milliseconds
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        break;
+                    }
+                }
+            }
+        });
+
+        physicsThread.setDaemon(true); // Ensure the thread does not prevent JVM shutdown
+        physicsThread.start();
     }
+
 
     public static void initialize() {
         readyToInitialize = true;
@@ -69,6 +102,7 @@ public class PhysicsWorld {
     private static void initializeWorld() {
         Constants.LOGGER.info("Initializing Physics World");
         space = new PhysicsSpace(PhysicsSpace.BroadphaseType.DBVT);
+
         space.setGravity(new Vector3f(0, -9.81f, 0));
     }
 
@@ -131,13 +165,11 @@ public class PhysicsWorld {
 
     public static void reset() {
         space = null;
-        blockBodies.clear();
         IPhysicsEntity[] entities = allObjects.toArray(new IPhysicsEntity[0]);
         for (IPhysicsEntity entity : entities) {
             entity.kill();
         }
         allObjects.clear();
-        blocks.clear();
         cubes.clear();
         chunkBodies.clear();
         queuedBodies.clear();
@@ -194,12 +226,28 @@ public class PhysicsWorld {
         CompoundCollisionShape chunkShape = new CompoundCollisionShape();
         CompoundCollisionShape iceShape = new CompoundCollisionShape();
         AtomicBoolean hasIce = new AtomicBoolean(false);
+
+        Array<Vec3Int> ignoreBlocks = new Array<>();
+        if(portalsLoaded){
+            for(Portal p : SeamlessPortals.portalManager.createdPortals.values()){
+                if(p instanceof HPGPortal hpg){
+                    ignoreBlocks.addAll(PortalUtils.getBlocksOn(hpg, chunk.getZone()));
+                }
+            }
+        }
+
         for (int x = 0; x < 16; x++) {
             for (int y = 0; y < 16; y++) {
                 for (int z = 0; z < 16; z++) {
+                    Vec3Int pos = new Vec3Int(x, y, z);
+                    Vec3Int globalPos = pos.copy().add(chunk.getBlockX(), chunk.getBlockY(), chunk.getBlockZ());
+                    if(ignoreBlocks.contains(globalPos, false)){
+                        System.out.println("Ignoring block at " + globalPos);
+                        //BlockUtil.setBlockAt(chunk.getZone(), Block.WATER.getDefaultBlockState(), globalPos.x, globalPos.y, globalPos.z);
+                        continue;
+                    }
                     BlockState state = blockData.getBlockValue(x, y, z);
                     if (isEmpty(state)) continue;
-                    Vector3 pos = new Vector3(x, y, z);
                     Array<BoundingBox> boxes = new Array<>();
                     state.getModel().getAllBoundingBoxes(boxes, 0, 0, 0);
                     boxes.forEach(box -> {
@@ -207,9 +255,9 @@ public class PhysicsWorld {
                         Vector3f center = new Vector3f(box.getCenterX(), box.getCenterY(), box.getCenterZ());
                         BoxCollisionShape boxShape = new BoxCollisionShape(halfExtents);
 
-                        if(state.friction >=1) chunkShape.addChildShape(boxShape, center.add(PhysicsUtils.v3ToV3f(pos)));
+                        if(state.friction >=1) chunkShape.addChildShape(boxShape, center.add(pos.toVector3f()));
                         else {
-                            iceShape.addChildShape(boxShape, center.add(PhysicsUtils.v3ToV3f(pos)));
+                            iceShape.addChildShape(boxShape, center.add(pos.toVector3f()));
                             hasIce.set(true);
                         }
                     });

@@ -3,63 +3,23 @@ package me.nabdev.physicsmod.mixins;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.BoundingBox;
-import com.badlogic.gdx.utils.Array;
 import finalforeach.cosmicreach.blocks.BlockState;
 import finalforeach.cosmicreach.entities.Entity;
+import finalforeach.cosmicreach.entities.player.PlayerEntity;
 import finalforeach.cosmicreach.util.Axis;
 import finalforeach.cosmicreach.world.Zone;
 import me.nabdev.physicsmod.entities.Cube;
 import me.nabdev.physicsmod.utils.PhysicsWorld;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 
-@Mixin(Entity.class)
-public class PlayerEntityMixin{
-    @Shadow
-    public Vector3 velocity;
-    @Shadow
-    public Vector3 onceVelocity;
-    @Shadow
-    public BoundingBox tmpEntityBoundingBox;
-    @Shadow
-    public BoundingBox tmpBlockBoundingBox;
-    @Shadow
-    public boolean collidedX;
-    @Shadow
-    public boolean collidedZ;
-    @Shadow
-    public boolean isOnGround;
-    @Shadow
-    public float footstepTimer;
-    @Shadow
-    private float floorFriction;
-    @Shadow
-    public float maxStepHeight;
-    @Shadow
-    public Vector3 position;
-    @Shadow
-    public BoundingBox localBoundingBox;
-    @Shadow
-    public BoundingBox tmpEntityBoundingBox2;
-    @Shadow
-    public BoundingBox tmpBlockBoundingBox2;
-    @Shadow
-    public Array<BoundingBox> tmpBlockBoundingBoxes;
-    @Shadow
-    public void onCollideWithBlock(Axis axis, BlockState block, int bx, int by, int bz) {}
-    @Shadow
-    public boolean shouldConstrainBySneak(Zone zone, BoundingBox blockBB, BoundingBox entityBB, int minBx, int minBy, int minBz, int maxBx, int maxBz) { return false; }
-    @Shadow
-    public boolean isInFluid() { return false; }
+@Mixin(PlayerEntity.class)
+public class PlayerEntityMixin extends Entity {
+    public PlayerEntityMixin(String entityTypeId) {
+        super(entityTypeId);
+    }
 
-
-    /**
-     * @author nab138
-     * @reason Mixin Extras is broken so cant do local var modification
-     */
-    @Overwrite
+    @Override
     public void updateConstraints(Zone zone, Vector3 targetPosition) {
         float floorFriction = 0.0F;
         this.tmpEntityBoundingBox.set(this.localBoundingBox);
@@ -373,6 +333,69 @@ public class PlayerEntityMixin{
 
         this.position.set(targetPosition.x, targetPosition.y, targetPosition.z);
     }
+
+//    @Inject(method = "updateConstraints", at = @At(value = "FIELD", target = "Lfinalforeach/cosmicreach/entities/Entity;isOnGround:Z", opcode = Opcodes.GETFIELD, shift = At.Shift.BEFORE))
+//    private void constraintsOne(Zone zone, Vector3 targetPosition, CallbackInfo ci, @Local(ordinal = 0) LocalFloatRef floorFriction, @Local LocalBooleanRef isOnGround, @Local(ordinal = 1) LocalFloatRef minPosY, @Local(ordinal = 2) LocalFloatRef maxPosY) {
+//        for (Cube cube : PhysicsWorld.cubes) {
+//            if (cube == null) continue;
+//            cube.getBoundingBox(this.tmpBlockBoundingBox);
+//            // Expand the bounding box by 0.1f on all sides
+//            if (!this.tmpBlockBoundingBox.intersects(this.tmpEntityBoundingBox)) continue;
+//            Vector3 diff = new Vector3(targetPosition).sub(cube.position);
+//
+//            // Check if the player is above the cube
+//            if (diff.y >= 0f && diff.y <= cube.localBoundingBox.getHeight() / 2f) {
+//                minPosY.set((Math.max(minPosY.get(), cube.position.y + cube.localBoundingBox.max.y - 0.01f)));
+//                maxPosY.set((Math.max(maxPosY.get(), minPosY.get())));
+//                if (!this.isOnGround) {
+//                    this.footstepTimer = 0.45F;
+//                }
+//                isOnGround.set(true);
+//                floorFriction.set(Math.max(floorFriction.get(), cube.blockState.friction));
+//                break;
+//            }
+//            if (diff.y > -1.6f - cube.localBoundingBox.getHeight() / 2 && diff.y < 0f) {
+//                if (Math.abs(diff.x) > Math.abs(diff.z)) {
+//                    physicsMod$fixPositionX(targetPosition);
+//                }
+//            }
+//
+//        }
+//    }
+//
+//    @Inject(method = "updateConstraints", at = @At(value = "INVOKE", target = "Lcom/badlogic/gdx/math/Vector3;set(FFF)Lcom/badlogic/gdx/math/Vector3;", shift = At.Shift.BEFORE))
+//    private void constraintsTwo(Zone zone, Vector3 targetPosition, CallbackInfo ci, @Local(ordinal = 1) boolean steppedUpForAll, @Local(ordinal = 3) float desiredStepUp) {
+//                for (Cube cube : PhysicsWorld.cubes) {
+//            if (cube == null) continue;
+//            cube.getBoundingBox(this.tmpBlockBoundingBox);
+//            // Expand the bounding box by 0.1f on all sides
+//            if (!this.tmpBlockBoundingBox.intersects(this.tmpEntityBoundingBox)) continue;
+//            Vector3 diff = new Vector3(targetPosition).sub(cube.position);
+//
+//            // Check if the player is above the cube
+//            if (diff.y >= 0f && diff.y <= cube.localBoundingBox.getHeight() / 2f) {
+//                break;
+//            }
+//            if (diff.y > -2.5f * cube.localBoundingBox.getHeight() && diff.y < -0f) {
+//                if (Math.abs(diff.x) > Math.abs(diff.z)) {
+//                    physicsMod$fixPositionX(targetPosition);
+//                } else {
+//                    if (cube.position.z > targetPosition.z) {
+//                        targetPosition.z = this.tmpBlockBoundingBox.min.z - this.tmpEntityBoundingBox.getDepth() / 2.0F - 0.01F;
+//                    } else {
+//                        targetPosition.z = this.tmpBlockBoundingBox.max.z + this.tmpEntityBoundingBox.getDepth() / 2.0F + 0.01F;
+//                    }
+//                    this.collidedZ = true;
+//                    this.onceVelocity.z = 0.0F;
+//                    this.velocity.z = 0.0F;
+//                }
+//            }
+//        }
+//
+//        if (steppedUpForAll) {
+//            targetPosition.y = desiredStepUp;
+//        }
+//    }
 
     @Unique
     private void physicsMod$fixPositionX(Vector3 targetPosition) {

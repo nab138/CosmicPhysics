@@ -29,6 +29,8 @@ dependencies {
 
 
     cosmicReach("finalforeach:cosmicreach:${cosmic_reach_version}")
+
+    mod files('run/pmods/CosmicReach-Seamless-Portals-2.1.0-merged-bundle.jar')
 }
 
 processResources {

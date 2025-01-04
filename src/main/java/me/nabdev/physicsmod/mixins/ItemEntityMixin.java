@@ -2,6 +2,7 @@ package me.nabdev.physicsmod.mixins;
 
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Quaternion;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.BoundingBox;
@@ -34,7 +35,7 @@ import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 
-@Mixin(ItemEntity.class)
+@Mixin(value = ItemEntity.class, priority = 999)
 public abstract class ItemEntityMixin extends Entity implements IPhysicsEntity, IPhysicsItem {
     @Unique
     private PhysicsRigidBody physicsMod$body;
@@ -71,6 +72,7 @@ public abstract class ItemEntityMixin extends Entity implements IPhysicsEntity, 
     @Unique
     private static final EntityRenderRotationPacket physicsMod$rotationPacket = new EntityRenderRotationPacket();
 
+
     @Override
     public void onDeath() {
         super.onDeath();
@@ -95,12 +97,12 @@ public abstract class ItemEntityMixin extends Entity implements IPhysicsEntity, 
     @Shadow
     public static Identifier pickupSoundId;
 
+    @Unique
+    private final Matrix4 physicsMod$tmpModelMatrix = new Matrix4();
+    @Unique
+    private final Vector3 physicsMod$tmpRenderPos = new Vector3();
 
-    /**
-     * @author nab138
-     * @reason physics
-     */
-    @Overwrite
+    @Override
     public void update(Zone zone, double deltaTime) {
         physicsMod$currentZone = zone;
         if (!PhysicsWorld.isRunning) {
@@ -206,7 +208,11 @@ public abstract class ItemEntityMixin extends Entity implements IPhysicsEntity, 
         }
     }
 
-    @Override
+    /**
+     * @author nab138
+     * @reason Physics items
+     */
+    @Overwrite
     public void render(Camera worldCamera) {
         if (worldCamera.frustum.boundsInFrustum(this.globalBoundingBox)) {
             if (this.modelInstance == null && itemStack != null) {
@@ -214,20 +220,34 @@ public abstract class ItemEntityMixin extends Entity implements IPhysicsEntity, 
             }
 
             if (this.modelInstance != null) {
-                tmpRenderPos.set(this.lastRenderPosition);
-                TickRunner.INSTANCE.partTickLerp(tmpRenderPos, this.position);
-                tmpRenderPos.set(this.position);
-                this.lastRenderPosition.set(tmpRenderPos);
-                tmpModelMatrix.idt();
-                tmpModelMatrix.translate(tmpRenderPos);
-                tmpModelMatrix.scl(renderSize);
-                tmpModelMatrix.rotate(physicsMod$rotation);
-                tmpModelMatrix.translate(-0.5F, -0.5F, -0.5F);
+                physicsMod$tmpRenderPos.set(this.lastRenderPosition);
+                TickRunner.INSTANCE.partTickLerp(physicsMod$tmpRenderPos, this.position);
+                physicsMod$tmpRenderPos.set(this.position);
+                this.lastRenderPosition.set(physicsMod$tmpRenderPos);
+                physicsMod$tmpModelMatrix.idt();
+                physicsMod$tmpModelMatrix.translate(physicsMod$tmpRenderPos);
+                physicsMod$tmpModelMatrix.scl(renderSize);
+                physicsMod$tmpModelMatrix.rotate(physicsMod$rotation);
+                physicsMod$tmpModelMatrix.translate(-0.5F, -0.5F, -0.5F);
 
                 this.renderModelAfterMatrixSet(worldCamera);
             }
 
         }
+    }
+
+    @Override
+    public void renderModelAfterMatrixSet(Camera worldCamera) {
+        float r = this.modelLightColor.r;
+        float g = this.modelLightColor.g;
+        float b = this.modelLightColor.b;
+        if (this.invulnerabiltyFrames > 0) {
+            b = 0.0F;
+            g = 0.0F;
+        }
+
+        this.modelInstance.setTint(r, g, b, 1.0F);
+        this.modelInstance.render(this, worldCamera, physicsMod$tmpModelMatrix);
     }
 
     @Override
