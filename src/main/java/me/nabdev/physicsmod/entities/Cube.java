@@ -126,7 +126,10 @@ public class Cube extends Entity implements IPhysicsEntity {
 
         if (magnetPlayer != null) PhysicsUtils.applyMagnetForce(magnetPlayer, position, body);
 
-
+        Vector3f pos = body.getPhysicsLocation(null);
+        com.jme3.math.Quaternion rot = body.getPhysicsRotation(null);
+        rotation = new Quaternion(rot.getX(), rot.getY(), rot.getZ(), rot.getW());
+        position.set(pos.x, pos.y, pos.z);
 
         this.getBoundingBox(this.globalBoundingBox);
         this.updateEntityChunk(zone);
