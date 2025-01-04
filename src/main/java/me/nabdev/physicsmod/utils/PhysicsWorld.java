@@ -57,7 +57,7 @@ public class PhysicsWorld {
     static {
 
         Thread physicsThread = new Thread(() -> {
-            final long frameTime = 1_000_000_000 / 100; // 100 updates per second
+            final long frameTime = 1_000_000_000 / 60; // 60 updates per second
             long lastTime = System.nanoTime();
 
             while (true) {

@@ -126,10 +126,7 @@ public class Cube extends Entity implements IPhysicsEntity {
 
         if (magnetPlayer != null) PhysicsUtils.applyMagnetForce(magnetPlayer, position, body);
 
-        Vector3f pos = body.getPhysicsLocation(null);
-        com.jme3.math.Quaternion rot = body.getPhysicsRotation(null);
-        rotation = new Quaternion(rot.getX(), rot.getY(), rot.getZ(), rot.getW());
-        position.set(pos.x, pos.y, pos.z);
+
 
         this.getBoundingBox(this.globalBoundingBox);
         this.updateEntityChunk(zone);
@@ -163,6 +160,10 @@ public class Cube extends Entity implements IPhysicsEntity {
             this.modelInstance = GameSingletons.itemEntityModelLoader.load(new ItemStack(blockState.getItem()));
 
         }
+        Vector3f pos = body.getPhysicsLocation(null);
+        com.jme3.math.Quaternion rot = body.getPhysicsRotation(null);
+        rotation = new Quaternion(rot.getX(), rot.getY(), rot.getZ(), rot.getW());
+        position.set(pos.x, pos.y, pos.z);
         tmpRenderPos.set(this.lastRenderPosition);
         TickRunner.INSTANCE.partTickLerp(tmpRenderPos, this.position);
         tmpRenderPos.set(this.position);
