@@ -3,7 +3,6 @@ package me.nabdev.physicsmod.utils;
 
 import com.badlogic.gdx.math.collision.BoundingBox;
 import com.badlogic.gdx.utils.Array;
-import com.github.puzzle.core.loader.util.ModLocator;
 import com.jme3.bullet.PhysicsSpace;
 import com.jme3.bullet.collision.shapes.BoxCollisionShape;
 import com.jme3.bullet.collision.shapes.CompoundCollisionShape;
@@ -27,11 +26,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static me.nabdev.physicsmod.PhysicsMod.portalsLoaded;
 import static me.nabdev.physicsmod.utils.PhysicsUtils.isEmpty;
 
 public class PhysicsWorld {
-    public static final boolean portalsLoaded = ModLocator.isModLoaded("seamlessportals");
-
     public static boolean paused = false;
     private static class ChunkBodyData {
         public PhysicsRigidBody body = null;
