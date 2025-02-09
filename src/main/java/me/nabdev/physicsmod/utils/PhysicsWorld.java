@@ -246,19 +246,23 @@ public class PhysicsWorld {
                     }
                     BlockState state = blockData.getBlockValue(x, y, z);
                     if (isEmpty(state)) continue;
-                    Array<BoundingBox> boxes = new Array<>();
-                    state.getModel().getAllBoundingBoxes(boxes, 0, 0, 0);
-                    boxes.forEach(box -> {
-                        Vector3f halfExtents = new Vector3f((box.max.x - box.min.x) / 2, (box.max.y - box.min.y) / 2, (box.max.z - box.min.z) / 2);
-                        Vector3f center = new Vector3f(box.getCenterX(), box.getCenterY(), box.getCenterZ());
-                        BoxCollisionShape boxShape = new BoxCollisionShape(halfExtents);
+                    Array<BoundingBox> boxes = new Array<>(BoundingBox.class);
+                    try {
+                        state.getModel().getAllBoundingBoxes(boxes, 0, 0, 0);
+                        boxes.forEach(box -> {
+                            Vector3f halfExtents = new Vector3f((box.max.x - box.min.x) / 2, (box.max.y - box.min.y) / 2, (box.max.z - box.min.z) / 2);
+                            Vector3f center = new Vector3f(box.getCenterX(), box.getCenterY(), box.getCenterZ());
+                            BoxCollisionShape boxShape = new BoxCollisionShape(halfExtents);
 
-                        if(state.friction >=1) chunkShape.addChildShape(boxShape, center.add(pos.toVector3f()));
-                        else {
-                            iceShape.addChildShape(boxShape, center.add(pos.toVector3f()));
-                            hasIce.set(true);
-                        }
-                    });
+                            if (state.friction >= 1) chunkShape.addChildShape(boxShape, center.add(pos.toVector3f()));
+                            else {
+                                iceShape.addChildShape(boxShape, center.add(pos.toVector3f()));
+                                hasIce.set(true);
+                            }
+                        });
+                    } catch (Exception e) {
+                        Constants.LOGGER.error("Error adding block at {}", globalPos, e);
+                    }
                 }
             }
         }

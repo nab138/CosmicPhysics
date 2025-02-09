@@ -61,9 +61,13 @@ public class PlayerEntityMixin extends Entity {
 
                                         isOnGround = true;
                                         floorFriction = Math.max(floorFriction, blockAdj.friction);
+                                        this.blockBouncinessY = Math.max(this.blockBouncinessY, blockAdj.bounciness);
                                     } else {
                                         maxPosY = Math.min(maxPosY, bb.min.y - this.localBoundingBox.getHeight() - 0.01F);
+                                        this.blockBouncinessY = Math.min(this.blockBouncinessY, -blockAdj.bounciness);
                                     }
+
+                                    this.collidedY = true;
 
                                     this.onCollideWithBlock(Axis.Y, blockAdj, bx, by, bz);
                                 }
@@ -92,6 +96,7 @@ public class PlayerEntityMixin extends Entity {
                 }
                 isOnGround = true;
                 floorFriction = Math.max(floorFriction, cube.blockState.friction);
+                this.blockBouncinessY = Math.max(this.blockBouncinessY, cube.blockState.bounciness);
                 break;
             }
             if (diff.y > -1.6f - cube.localBoundingBox.getHeight() / 2 && diff.y < 0f) {
@@ -104,7 +109,9 @@ public class PlayerEntityMixin extends Entity {
 
         if (isOnGround) {
             this.floorFriction = floorFriction;
-        } else if (this.isInFluid()) {
+        } else if (!this.isInFluid() && !this.noClip) {
+            this.floorFriction = 0.1F;
+        } else {
             this.floorFriction = 1.0F;
         }
 

@@ -81,7 +81,7 @@ public class PhysicsUtils {
     }
 
     public static CompoundCollisionShape getCollisionMeshForBlock(BlockState blockState) {
-        Array<BoundingBox> boxes = new Array<>();
+        Array<BoundingBox> boxes = new Array<>(BoundingBox.class);
         blockState.getModel().getAllBoundingBoxes(boxes, 0, 0, 0);
         CompoundCollisionShape compoundShape = new CompoundCollisionShape();
         boxes.forEach(box -> {

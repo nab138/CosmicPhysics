@@ -37,7 +37,7 @@ public class PortalCube extends Cube implements IPortalableEntity {
     private final transient Vector3 tmpPortalNextPosition = new Vector3();
 
     @Override
-    public void update(Zone zone, double deltaTime) {
+    public void update(Zone zone, float deltaTime) {
         super.update(zone, deltaTime);
         this.updatePortalPositions(zone, deltaTime);
     }

@@ -3,7 +3,6 @@ package me.nabdev.physicsmod.items;
 import com.badlogic.gdx.math.Vector3;
 import com.github.puzzle.game.items.IModItem;
 import com.github.puzzle.game.items.data.DataTagManifest;
-import com.github.puzzle.game.util.BlockSelectionUtil;
 import com.github.puzzle.game.util.BlockUtil;
 import com.github.puzzle.game.util.IClientNetworkManager;
 import finalforeach.cosmicreach.GameSingletons;
@@ -46,16 +45,19 @@ public class PhysicsInfuser implements IModItem {
     }
 
     @Override
-    public void use(ItemSlot slot, Player player) {
+    public void use(ItemSlot slot, Player player, BlockPosition targetPlaceBlockPos, BlockPosition pos) {
         if (ignoreNextUse) {
             ignoreNextUse = false;
             return;
         }
-        BlockState block = BlockSelectionUtil.getBlockLookingAt();
-        BlockPosition pos = BlockSelectionUtil.getBlockPositionLookingAt();
-        if (block == null || pos == null) {
+        if (pos == null) {
             return;
         }
+        BlockState block = pos.getBlockState();
+        if (block == null || block.getBlock() == null || block.getBlock() == Block.AIR) {
+            return;
+        }
+
 
         Zone z = player.getZone();
         if(z == null) {
@@ -65,6 +67,7 @@ public class PhysicsInfuser implements IModItem {
             createPacket.setCubeInfo(z, pos, block);
             IClientNetworkManager.sendAsClient(createPacket);
         }
+
 
         if(GameSingletons.isHost) {
             BlockUtil.setBlockAt(z, Block.AIR.getDefaultBlockState(), pos);

@@ -32,7 +32,7 @@ public final class NativeLibraryLoader {
             IOUtils.copy(in, out);
             in.close();
             out.close();
-            System.load(fileOut.toString());
+            System.load(fileOut.getAbsoluteFile().toString());
             success = true;
         } catch (Exception e) {
             //noinspection CallToPrintStackTrace

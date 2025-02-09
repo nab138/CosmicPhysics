@@ -7,6 +7,7 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.BoundingBox;
 import com.badlogic.gdx.utils.Array;
 import com.github.puzzle.game.util.BlockUtil;
+import com.github.puzzle.game.util.IClientNetworkManager;
 import com.jme3.bullet.collision.shapes.CompoundCollisionShape;
 import com.jme3.bullet.objects.PhysicsRigidBody;
 import com.jme3.math.Vector3f;
@@ -62,7 +63,6 @@ public class Cube extends Entity implements IPhysicsEntity {
     protected static final Vector3 tmpRenderPos = new Vector3();
 
 
-
     public Cube(Vector3f pos, BlockState blockState) {
         super(id.toString());
 
@@ -71,12 +71,17 @@ public class Cube extends Entity implements IPhysicsEntity {
 
 
         setPosition(pos.x, pos.y, pos.z);
-        body = new PhysicsRigidBody(getCollisionMesh(), mass);
-        accel = PhysicsUtils.v3fToV3(body.getGravity(new Vector3f()));
-        body.setPhysicsLocation(pos);
-        body.setFriction((float)frictionInterpolation(blockState.friction));
+        if(!IClientNetworkManager.isConnected()) {
+            body = new PhysicsRigidBody(getCollisionMesh(), mass);
+            accel = PhysicsUtils.v3fToV3(body.getGravity(new Vector3f()));
+            body.setPhysicsLocation(pos);
+            body.setFriction((float) frictionInterpolation(blockState.friction));
 
-        PhysicsWorld.addCube(this);
+            PhysicsWorld.addCube(this);
+        } else {
+            body = null;
+                    accel = new Vector3(0, -9.8f, 0);
+        }
     }
 
     public Cube() {
@@ -93,12 +98,15 @@ public class Cube extends Entity implements IPhysicsEntity {
         this.localBoundingBox.max.set(0.5F, 0.5F, 0.5F);
         this.localBoundingBox.update();
         blockState = BlockState.getInstance(deserialize.readString("blockID"), MissingBlockStateResult.MISSING_OBJECT);
-        body.setCollisionShape(getCollisionMesh());
-        body.setFriction((float)frictionInterpolation(blockState.friction));
-        body.setPhysicsLocation(new Vector3f(position.x, position.y, position.z));
+
         float[] rot = deserialize.readFloatArray("rotation");
         rotation = new Quaternion(rot[0], rot[1], rot[2], rot[3]);
-        body.setPhysicsRotation(new com.jme3.math.Quaternion(rot[0], rot[1], rot[2], rot[3]));
+        if(!IClientNetworkManager.isConnected()) {
+            body.setCollisionShape(getCollisionMesh());
+            body.setFriction((float) frictionInterpolation(blockState.friction));
+            body.setPhysicsLocation(new Vector3f(position.x, position.y, position.z));
+            body.setPhysicsRotation(new com.jme3.math.Quaternion(rot[0], rot[1], rot[2], rot[3]));
+        }
 //        int[] linkedIDs = deserialize.readIntArray("linkedEntities");
 //        PhysicsUtils.queueLinks(this, linkedIDs);
     }
@@ -115,8 +123,7 @@ public class Cube extends Entity implements IPhysicsEntity {
     }
 
 
-    @Override
-    public void update(Zone zone, double delta) {
+    public void update(Zone zone, float delta) {
         currentZone = zone;
         if (!PhysicsWorld.isRunning) {
             PhysicsWorld.initialize();
@@ -163,10 +170,12 @@ public class Cube extends Entity implements IPhysicsEntity {
             this.modelInstance = GameSingletons.itemEntityModelLoader.load(new ItemStack(blockState.getItem()));
 
         }
-        Vector3f pos = body.getPhysicsLocation(null);
-        com.jme3.math.Quaternion rot = body.getPhysicsRotation(null);
-        rotation = new Quaternion(rot.getX(), rot.getY(), rot.getZ(), rot.getW());
-        position.set(pos.x, pos.y, pos.z);
+        if(!IClientNetworkManager.isConnected()) {
+            Vector3f pos = body.getPhysicsLocation(null);
+            com.jme3.math.Quaternion rot = body.getPhysicsRotation(null);
+            rotation = new Quaternion(rot.getX(), rot.getY(), rot.getZ(), rot.getW());
+            position.set(pos.x, pos.y, pos.z);
+        }
         tmpRenderPos.set(this.lastRenderPosition);
         TickRunner.INSTANCE.partTickLerp(tmpRenderPos, this.position);
         tmpRenderPos.set(this.position);
@@ -242,7 +251,6 @@ public class Cube extends Entity implements IPhysicsEntity {
             PhysicsWorld.dropMagnet(magnetPlayer);
         }
 
-        body.activate(true);
         setVelocity(sourceEntity.viewDirection.scl(12f));
     }
 

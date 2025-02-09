@@ -103,7 +103,7 @@ public abstract class ItemEntityMixin extends Entity implements IPhysicsEntity, 
     private final Vector3 physicsMod$tmpRenderPos = new Vector3();
 
     @Override
-    public void update(Zone zone, double deltaTime) {
+    public void update(Zone zone, float deltaTime) {
         physicsMod$currentZone = zone;
         if (!PhysicsWorld.isRunning) {
             if (physicsMod$body == null) PhysicsWorld.initialize();
