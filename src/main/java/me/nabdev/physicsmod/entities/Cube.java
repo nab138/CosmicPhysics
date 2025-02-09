@@ -76,12 +76,11 @@ public class Cube extends Entity implements IPhysicsEntity {
             accel = PhysicsUtils.v3fToV3(body.getGravity(new Vector3f()));
             body.setPhysicsLocation(pos);
             body.setFriction((float) frictionInterpolation(blockState.friction));
-
-            PhysicsWorld.addCube(this);
         } else {
             body = null;
                     accel = new Vector3(0, -9.8f, 0);
         }
+        PhysicsWorld.addCube(this);
     }
 
     public Cube() {
