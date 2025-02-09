@@ -24,7 +24,11 @@ repositories {
 }
 
 dependencies {
-    bundle("com.github.stephengold:Libbulletjme:21.2.1")
+    bundle("com.github.stephengold:Libbulletjme-Windows64:22.0.1")
+    bundle("com.github.stephengold:Libbulletjme-Linux64:22.0.1:SpDebug")
+    bundle("com.github.stephengold:Libbulletjme-Windows64:22.0.1:SpDebug")
+    bundle("com.github.stephengold:Libbulletjme-MacOSX_ARM64:22.0.1:SpDebug")
+    bundle("io.github.electrostat-lab:snaploader:1.0.0-stable")
     bundle("commons-io:commons-io:2.16.1")
 
 
