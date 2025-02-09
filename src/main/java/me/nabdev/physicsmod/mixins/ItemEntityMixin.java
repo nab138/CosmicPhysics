@@ -97,6 +97,8 @@ public abstract class ItemEntityMixin extends Entity implements IPhysicsEntity, 
     @Shadow
     public static Identifier pickupSoundId;
 
+    @Shadow public abstract float getBounciness();
+
     @Unique
     private final Matrix4 physicsMod$tmpModelMatrix = new Matrix4();
     @Unique
@@ -116,6 +118,7 @@ public abstract class ItemEntityMixin extends Entity implements IPhysicsEntity, 
             physicsMod$body = new PhysicsRigidBody(boxShape, 0.5f);
             physicsMod$body.setPhysicsLocation(new Vector3f(position.x, position.y, position.z));
             physicsMod$body.setFriction(1f);
+            physicsMod$body.setRestitution(getBounciness());
 
             PhysicsWorld.addEntity(this);
 

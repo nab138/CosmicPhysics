@@ -271,6 +271,7 @@ public class PhysicsWorld {
         if (!seenBefore) {
             PhysicsRigidBody body = new PhysicsRigidBody(chunkShape, 0);
             body.setFriction(0.7f);
+            body.setRestitution(0.7f);
             body.setPhysicsLocation(new Vector3f(chunk.getBlockX(), chunk.getBlockY(), chunk.getBlockZ()));
             addRigidBody(body);
             chunkData.body = body;
@@ -280,6 +281,7 @@ public class PhysicsWorld {
                 PhysicsRigidBody iceBody = new PhysicsRigidBody(iceShape, 0);
                 iceBody.setPhysicsLocation(new Vector3f(chunk.getBlockX(), chunk.getBlockY(), chunk.getBlockZ()));
                 iceBody.setFriction(iceFriction);
+                body.setRestitution(0.7f);
                 addRigidBody(iceBody);
                 chunkData.iceBody = iceBody;
             }

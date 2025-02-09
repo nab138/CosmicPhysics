@@ -76,6 +76,7 @@ public class Cube extends Entity implements IPhysicsEntity {
             accel = PhysicsUtils.v3fToV3(body.getGravity(new Vector3f()));
             body.setPhysicsLocation(pos);
             body.setFriction((float) frictionInterpolation(blockState.friction));
+            body.setRestitution(blockState.bounciness);
         } else {
             body = null;
                     accel = new Vector3(0, -9.8f, 0);
@@ -103,6 +104,7 @@ public class Cube extends Entity implements IPhysicsEntity {
         if(!IClientNetworkManager.isConnected()) {
             body.setCollisionShape(getCollisionMesh());
             body.setFriction((float) frictionInterpolation(blockState.friction));
+            body.setRestitution(blockState.bounciness);
             body.setPhysicsLocation(new Vector3f(position.x, position.y, position.z));
             body.setPhysicsRotation(new com.jme3.math.Quaternion(rot[0], rot[1], rot[2], rot[3]));
         }
