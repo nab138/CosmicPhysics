@@ -1,7 +1,6 @@
 package me.nabdev.physicsmod.mixins;
 
 import finalforeach.cosmicreach.networking.GamePacket;
-import me.nabdev.physicsmod.entities.CreateCubePacket;
 import me.nabdev.physicsmod.entities.EntityRenderRotationPacket;
 import me.nabdev.physicsmod.entities.EntityRenderRotationScalePacket;
 import me.nabdev.physicsmod.items.LinkCubePacket;
@@ -20,7 +19,6 @@ public abstract class GamePacketMixin {
     private static void registerPackets(CallbackInfo ci) {
        registerPacket(EntityRenderRotationPacket.class);
        registerPacket(EntityRenderRotationScalePacket.class);
-       registerPacket(CreateCubePacket.class);
        registerPacket(MagnetPacket.class);
        registerPacket(LinkCubePacket.class);
     }
