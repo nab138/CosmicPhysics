@@ -77,11 +77,12 @@ public class Cube extends Entity implements IPhysicsEntity {
             body.setPhysicsLocation(pos);
             body.setFriction((float) frictionInterpolation(blockState.friction));
             body.setRestitution(blockState.bounciness);
+
+            PhysicsWorld.addCube(this);
         } else {
             body = null;
-                    accel = new Vector3(0, -9.8f, 0);
+            accel = new Vector3(0, -9.8f, 0);
         }
-        PhysicsWorld.addCube(this);
     }
 
     public Cube() {
@@ -169,8 +170,8 @@ public class Cube extends Entity implements IPhysicsEntity {
     public void render(Camera camera) {
         if (this.modelInstance == null && this.blockState != null) {
             this.modelInstance = GameSingletons.itemEntityModelLoader.load(new ItemStack(blockState.getItem()));
-
         }
+
         if(!IClientNetworkManager.isConnected()) {
             Vector3f pos = body.getPhysicsLocation(null);
             com.jme3.math.Quaternion rot = body.getPhysicsRotation(null);

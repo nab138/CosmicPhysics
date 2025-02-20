@@ -5,11 +5,14 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.BoundingBox;
 import com.badlogic.gdx.utils.Array;
 import com.jme3.bullet.collision.shapes.BoxCollisionShape;
+import com.jme3.bullet.collision.shapes.CollisionShape;
 import com.jme3.bullet.collision.shapes.CompoundCollisionShape;
 import com.jme3.bullet.objects.PhysicsRigidBody;
 import com.jme3.math.Vector3f;
 import finalforeach.cosmicreach.blocks.BlockState;
 import finalforeach.cosmicreach.entities.player.Player;
+import finalforeach.cosmicreach.items.Item;
+import finalforeach.cosmicreach.items.ItemBlock;
 import finalforeach.cosmicreach.world.Zone;
 import me.nabdev.physicsmod.entities.Cube;
 
@@ -91,5 +94,16 @@ public class PhysicsUtils {
             compoundShape.addChildShape(boxShape, center);
         });
         return compoundShape;
+    }
+
+    public static CollisionShape getCollisionMeshForItem(Item item, float renderSize) {
+        // if item is a block, return the block's collision mesh
+        if (item instanceof ItemBlock block) {
+            CollisionShape shape = getCollisionMeshForBlock(block.getBlockState());
+            shape.setScale(renderSize);
+            return shape;
+        }
+
+        return new BoxCollisionShape(new Vector3f(.5f, 0.5f, 0.1f).mult(renderSize));
     }
 }

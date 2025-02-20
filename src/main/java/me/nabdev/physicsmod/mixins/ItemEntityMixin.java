@@ -1,12 +1,14 @@
 package me.nabdev.physicsmod.mixins;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Quaternion;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.BoundingBox;
-import com.jme3.bullet.collision.shapes.BoxCollisionShape;
+import com.github.puzzle.game.util.IClientNetworkManager;
+import com.jme3.bullet.collision.shapes.CollisionShape;
 import com.jme3.bullet.objects.PhysicsRigidBody;
 import com.jme3.math.Vector3f;
 import de.pottgames.tuningfork.SoundBuffer;
@@ -18,7 +20,7 @@ import finalforeach.cosmicreach.entities.EntityUniqueId;
 import finalforeach.cosmicreach.entities.ItemEntity;
 import finalforeach.cosmicreach.entities.player.Player;
 import finalforeach.cosmicreach.items.ItemStack;
-import finalforeach.cosmicreach.networking.packets.ContainerSyncPacket;
+import finalforeach.cosmicreach.networking.packets.items.ContainerSyncPacket;
 import finalforeach.cosmicreach.networking.packets.sounds.PlaySound3DPacket;
 import finalforeach.cosmicreach.networking.server.ServerIdentity;
 import finalforeach.cosmicreach.networking.server.ServerSingletons;
@@ -104,6 +106,11 @@ public abstract class ItemEntityMixin extends Entity implements IPhysicsEntity, 
     @Unique
     private final Vector3 physicsMod$tmpRenderPos = new Vector3();
 
+    @Unique
+    private CollisionShape physicsMod$getCollisionMesh(){
+        return PhysicsUtils.getCollisionMeshForItem(itemStack.getItem(), renderSize);
+    }
+
     @Override
     public void update(Zone zone, float deltaTime) {
         physicsMod$currentZone = zone;
@@ -114,8 +121,7 @@ public abstract class ItemEntityMixin extends Entity implements IPhysicsEntity, 
         }
         hasGravity = false;
         if (physicsMod$body == null) {
-            BoxCollisionShape boxShape = new BoxCollisionShape(new Vector3f(0.5f, 0.5f, 0.5f).mult(renderSize));
-            physicsMod$body = new PhysicsRigidBody(boxShape, 0.5f);
+            physicsMod$body = new PhysicsRigidBody(physicsMod$getCollisionMesh(), 0.5f);
             physicsMod$body.setPhysicsLocation(new Vector3f(position.x, position.y, position.z));
             physicsMod$body.setFriction(1f);
             physicsMod$body.setRestitution(getBounciness());
@@ -154,8 +160,6 @@ public abstract class ItemEntityMixin extends Entity implements IPhysicsEntity, 
 
         physicsMod$lastRotation.set(physicsMod$rotation);
 
-        this.age = (float)((double)this.age + deltaTime);
-
         if (this.age > this.minPickupAge) {
             this.isFollowed = false;
             zone.forEachPlayer((p) -> {
@@ -166,7 +170,7 @@ public abstract class ItemEntityMixin extends Entity implements IPhysicsEntity, 
                 if (dist < 1.25F || distBottom < 1.0F) {
                     this.viewDirection.set(playerPos).add(playerEntity.viewPositionOffset).sub(this.position).nor();
                     float followSpeed = 15.0F * this.followTime;
-                    physicsMod$body.applyCentralImpulse(PhysicsUtils.v3ToV3f(viewDirection.scl(followSpeed)));
+                    this.onceVelocity.add(this.viewDirection).scl(followSpeed);
                     if (dist < 1.0F) {
                         int originalAmount = this.itemStack.amount;
                         int newAmount;
@@ -190,7 +194,7 @@ public abstract class ItemEntityMixin extends Entity implements IPhysicsEntity, 
                         }
                     }
 
-                    this.followTime = (float)((double)this.followTime + deltaTime);
+                    this.followTime += deltaTime;
                     this.isFollowed = true;
                 }
 
@@ -203,12 +207,14 @@ public abstract class ItemEntityMixin extends Entity implements IPhysicsEntity, 
         BlockState inBlockState = zone.getBlockState(this.position);
         if (inBlockState != null && !inBlockState.walkThrough && (this.collidedX || this.collidedZ)) {
             float floatSpeed = 2.0F;
-            this.onceVelocity.add(0.0F, floatSpeed, 0.0F);
+            this.velocity.add(0.0F, floatSpeed, 0.0F);
         }
 
         if (this.age > this.maxAge) {
             this.die(zone);
         }
+
+        this.age += deltaTime;
     }
 
     /**
@@ -217,6 +223,17 @@ public abstract class ItemEntityMixin extends Entity implements IPhysicsEntity, 
      */
     @Overwrite
     public void render(Camera worldCamera) {
+        if(!IClientNetworkManager.isConnected() && physicsMod$body != null) {
+            Vector3f pos = physicsMod$body.getPhysicsLocation(null);
+            com.jme3.math.Quaternion rot = physicsMod$body.getPhysicsRotation(null);
+            physicsMod$rotation = new Quaternion(rot.getX(), rot.getY(), rot.getZ(), rot.getW());
+            position.set(pos.x, pos.y, pos.z);
+        }
+
+        if (!GameSingletons.isHost) {
+            this.age += Gdx.graphics.getDeltaTime();
+        }
+
         if (worldCamera.frustum.boundsInFrustum(this.globalBoundingBox)) {
             if (this.modelInstance == null && itemStack != null) {
                 this.modelInstance = GameSingletons.itemEntityModelLoader.load(this.itemStack);
@@ -257,8 +274,11 @@ public abstract class ItemEntityMixin extends Entity implements IPhysicsEntity, 
     public void onUseInteraction(Player player, ItemStack heldItemStack) {
         if (heldItemStack == null) return;
         if (heldItemStack.getItem().getID().equals(GravityGun.id.toString())) {
-            if (physicsMod$magnetPlayer != null) return;
-            PhysicsWorld.magnet(player, this);
+            if (physicsMod$magnetPlayer != null) {
+                if(physicsMod$magnetPlayer.getAccount().getUniqueId().equals(player.getAccount().getUniqueId())) PhysicsWorld.dropMagnet(player);
+            } else {
+                PhysicsWorld.magnet(player, this);
+            }
         }
     }
 
