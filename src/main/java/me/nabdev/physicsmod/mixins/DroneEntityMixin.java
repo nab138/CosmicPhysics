@@ -3,6 +3,7 @@ package me.nabdev.physicsmod.mixins;
 import com.badlogic.gdx.math.collision.BoundingBox;
 import finalforeach.cosmicreach.entities.DroneEntity;
 import finalforeach.cosmicreach.entities.Entity;
+import finalforeach.cosmicreach.entities.IDamageSource;
 import me.nabdev.physicsmod.utils.IPhysicsEntity;
 import me.nabdev.physicsmod.utils.PhysicsWorld;
 import org.spongepowered.asm.mixin.Mixin;
@@ -22,7 +23,7 @@ public class DroneEntityMixin extends Entity {
         for (IPhysicsEntity c : PhysicsWorld.allObjects) {
             BoundingBox cubeBB = c.getBoundingBox();
             if (this.globalBoundingBox.intersects(cubeBB)) {
-                hit(100);
+                hit((IDamageSource) c,100);
             }
         }
     }

@@ -60,13 +60,12 @@ public abstract class ItemEntityMixin extends Entity implements IPhysicsEntity, 
 
     @Shadow
     float renderSize;
+    @Unique
+    private Vector3 physicsMod$lastViewDirection = new Vector3();
 
     public ItemEntityMixin(String entityTypeId) {
         super(entityTypeId);
     }
-
-    @Shadow
-    protected abstract void die(Zone zone);
 
     @Unique
     public Zone physicsMod$currentZone;
@@ -119,7 +118,7 @@ public abstract class ItemEntityMixin extends Entity implements IPhysicsEntity, 
             else die(zone);
             return;
         }
-        hasGravity = false;
+        gravityModifier = 0;
         if (physicsMod$body == null) {
             physicsMod$body = new PhysicsRigidBody(physicsMod$getCollisionMesh(), 0.5f);
             physicsMod$body.setPhysicsLocation(new Vector3f(position.x, position.y, position.z));
@@ -140,7 +139,7 @@ public abstract class ItemEntityMixin extends Entity implements IPhysicsEntity, 
         position.set(pos.x, pos.y, pos.z);
 
         this.getBoundingBox(this.globalBoundingBox);
-        this.updateEntityChunk(zone);
+        //this.updateEntityChunk(zone);
 
         if (ServerSingletons.SERVER != null) {
             if (!PhysicsUtils.epsilonEquals(physicsMod$rotation, physicsMod$lastRotation)) {
@@ -149,14 +148,14 @@ public abstract class ItemEntityMixin extends Entity implements IPhysicsEntity, 
             }
 
             boolean shouldSendPacket = !this.position.epsilonEquals(this.lastPosition);
-            shouldSendPacket |= !this.viewDirection.epsilonEquals(this.lastViewDirection);
+            shouldSendPacket |= !this.viewDirection.epsilonEquals(this.physicsMod$lastViewDirection);
             if (shouldSendPacket) {
                 positionPacket.setEntity(this);
                 ServerSingletons.SERVER.broadcast(zone, positionPacket);
             }
         }
 
-        this.lastViewDirection.set(this.viewDirection);
+        this.physicsMod$lastViewDirection.set(this.viewDirection);
 
         physicsMod$lastRotation.set(physicsMod$rotation);
 
@@ -240,34 +239,38 @@ public abstract class ItemEntityMixin extends Entity implements IPhysicsEntity, 
             }
 
             if (this.modelInstance != null) {
-                physicsMod$tmpRenderPos.set(this.lastRenderPosition);
-                TickRunner.INSTANCE.partTickLerp(physicsMod$tmpRenderPos, this.position);
-                physicsMod$tmpRenderPos.set(this.position);
-                this.lastRenderPosition.set(physicsMod$tmpRenderPos);
+                float cx = worldCamera.position.x;
+                float cy = worldCamera.position.y;
+                float cz = worldCamera.position.z;
                 physicsMod$tmpModelMatrix.idt();
-                physicsMod$tmpModelMatrix.translate(physicsMod$tmpRenderPos);
+                physicsMod$tmpRenderPos.set(this.lastRenderPosition);
+                TickRunner.INSTANCE.partTickSlerp(physicsMod$tmpRenderPos, this.position);
+                this.lastRenderPosition.set(physicsMod$tmpRenderPos);
                 physicsMod$tmpModelMatrix.scl(renderSize);
                 physicsMod$tmpModelMatrix.rotate(physicsMod$rotation);
                 physicsMod$tmpModelMatrix.translate(-0.5F, -0.5F, -0.5F);
-
-                this.renderModelAfterMatrixSet(worldCamera);
+                worldCamera.position.sub(physicsMod$tmpRenderPos);
+                worldCamera.update();
+                renderModelAfterMatrixSet(worldCamera, true);
+                worldCamera.position.set(cx, cy, cz);
+                worldCamera.update();
             }
 
         }
     }
 
     @Override
-    public void renderModelAfterMatrixSet(Camera worldCamera) {
+    public void renderModelAfterMatrixSet(Camera worldCamera, boolean shouldRender) {
         float r = this.modelLightColor.r;
         float g = this.modelLightColor.g;
         float b = this.modelLightColor.b;
-        if (this.invulnerabiltyFrames > 0) {
+        if (this.recentlyHit()) {
             b = 0.0F;
             g = 0.0F;
         }
 
         this.modelInstance.setTint(r, g, b, 1.0F);
-        this.modelInstance.render(this, worldCamera, physicsMod$tmpModelMatrix);
+        this.modelInstance.render(this, worldCamera, physicsMod$tmpModelMatrix, shouldRender);
     }
 
     @Override

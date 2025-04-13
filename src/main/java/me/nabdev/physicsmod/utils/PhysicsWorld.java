@@ -41,7 +41,7 @@ public class PhysicsWorld {
     public static final ArrayList<Cube> cubes = new ArrayList<>();
     public static PhysicsSpace space;
     public static final HashMap<Integer, String> blocks = new HashMap<>();
-    private static final HashMap<Chunk, ChunkBodyData> chunkBodies = new HashMap<>();
+    public static final HashMap<Chunk, ChunkBodyData> chunkBodies = new HashMap<>();
     private static final ArrayList<PhysicsRigidBody> queuedBodies = new ArrayList<>();
     public static HashMap<String, IPhysicsEntity> magnetEntities = new HashMap<>();
 

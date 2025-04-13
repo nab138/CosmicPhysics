@@ -18,13 +18,16 @@ import finalforeach.cosmicreach.blocks.BlockState;
 import finalforeach.cosmicreach.blocks.MissingBlockStateResult;
 import finalforeach.cosmicreach.entities.Entity;
 import finalforeach.cosmicreach.entities.EntityUniqueId;
+import finalforeach.cosmicreach.entities.IDamageSource;
 import finalforeach.cosmicreach.entities.player.Player;
 import finalforeach.cosmicreach.items.ItemStack;
 import finalforeach.cosmicreach.networking.server.ServerSingletons;
 import finalforeach.cosmicreach.rendering.entities.IEntityModelInstance;
+import finalforeach.cosmicreach.savelib.blockdata.IBlockData;
 import finalforeach.cosmicreach.savelib.crbin.CRBinDeserializer;
 import finalforeach.cosmicreach.savelib.crbin.CRBinSerializer;
 import finalforeach.cosmicreach.util.Identifier;
+import finalforeach.cosmicreach.world.Chunk;
 import finalforeach.cosmicreach.world.Zone;
 import me.nabdev.physicsmod.Constants;
 import me.nabdev.physicsmod.items.GravityGun;
@@ -35,7 +38,7 @@ import me.nabdev.physicsmod.utils.PhysicsUtils;
 import me.nabdev.physicsmod.utils.PhysicsWorld;
 
 
-public class Cube extends Entity implements IPhysicsEntity {
+public class Cube extends Entity implements IPhysicsEntity, IDamageSource {
     public static final Identifier id = Identifier.of(Constants.MOD_ID,"cube");
     public final Vector3 accel;
 
@@ -61,12 +64,13 @@ public class Cube extends Entity implements IPhysicsEntity {
 
     protected static final Matrix4 tmpModelMatrix = new Matrix4();
     protected static final Vector3 tmpRenderPos = new Vector3();
+    private final Vector3 lastViewDirection = new Vector3();
 
 
     public Cube(Vector3f pos, BlockState blockState) {
         super(id.toString());
 
-        this.hasGravity = false;
+        this.gravityModifier = 0;
         this.blockState = blockState;
 
 
@@ -124,8 +128,21 @@ public class Cube extends Entity implements IPhysicsEntity {
 //        serial.writeIntArray("linkedEntities", linkedIDs);
     }
 
-
+    @Override
     public void update(Zone zone, float delta) {
+
+        if (zone == null) {
+            body.setKinematic(true);
+            return;
+        }
+        Chunk c = zone.getChunkAtPosition(position);
+        if (c == null){
+            body.setKinematic(true);
+            return;
+        }
+        // noinspection all
+        IBlockData<BlockState> blockData = (IBlockData<BlockState>) c.getBlockData();
+        body.setKinematic(!blockData.isEntirely(Block.AIR.getDefaultBlockState()) && !PhysicsWorld.chunkBodies.containsKey(c));
         currentZone = zone;
         if (!PhysicsWorld.isRunning) {
             PhysicsWorld.initialize();
@@ -141,7 +158,6 @@ public class Cube extends Entity implements IPhysicsEntity {
         position.set(pos.x, pos.y, pos.z);
 
         this.getBoundingBox(this.globalBoundingBox);
-        this.updateEntityChunk(zone);
 
         if (ServerSingletons.SERVER != null) {
             if (!PhysicsUtils.epsilonEquals(rotation, lastRotation)) {
@@ -167,7 +183,7 @@ public class Cube extends Entity implements IPhysicsEntity {
     }
 
     @Override
-    public void render(Camera camera) {
+    public void render(Camera worldCamera) {
         if (this.modelInstance == null && this.blockState != null) {
             this.modelInstance = GameSingletons.itemEntityModelLoader.load(new ItemStack(blockState.getItem()));
         }
@@ -178,18 +194,22 @@ public class Cube extends Entity implements IPhysicsEntity {
             rotation = new Quaternion(rot.getX(), rot.getY(), rot.getZ(), rot.getW());
             position.set(pos.x, pos.y, pos.z);
         }
-        tmpRenderPos.set(this.lastRenderPosition);
-        TickRunner.INSTANCE.partTickLerp(tmpRenderPos, this.position);
-        tmpRenderPos.set(this.position);
-        this.lastRenderPosition.set(tmpRenderPos);
-        if (camera.frustum.boundsInFrustum(this.globalBoundingBox)) {
+        if (this.modelInstance != null) {
+            float cx = worldCamera.position.x;
+            float cy = worldCamera.position.y;
+            float cz = worldCamera.position.z;
             tmpModelMatrix.idt();
-            tmpModelMatrix.translate(tmpRenderPos);
+            tmpRenderPos.set(this.lastRenderPosition);
+            TickRunner.INSTANCE.partTickSlerp(tmpRenderPos, this.position);
+            this.lastRenderPosition.set(tmpRenderPos);
+            tmpModelMatrix.scl(PhysicsUtils.v3fToV3(scale));
             tmpModelMatrix.rotate(rotation);
-            tmpModelMatrix.scale(scale.x, scale.y, scale.z);
-            tmpModelMatrix.translate(-0.5f, -0.5f, -0.5f);
-
-            this.modelInstance.render(this, camera, tmpModelMatrix);
+            tmpModelMatrix.translate(-0.5F, -0.5F, -0.5F);
+            worldCamera.position.sub(tmpRenderPos);
+            worldCamera.update();
+            this.modelInstance.render(this, worldCamera, tmpModelMatrix, true);
+            worldCamera.position.set(cx, cy, cz);
+            worldCamera.update();
         }
 
         for (IPhysicsEntity linkedEntity : linkedEntities) {
@@ -201,17 +221,24 @@ public class Cube extends Entity implements IPhysicsEntity {
 
             Quaternion rotation = new Quaternion().setFromCross(Vector3.Z, direction);
 
+
+            float cx = worldCamera.position.x;
+            float cy = worldCamera.position.y;
+            float cz = worldCamera.position.z;
             tmpModelMatrix.idt();
-            tmpModelMatrix.translate(avgPos);
+            tmpRenderPos.set(avgPos);
             tmpModelMatrix.rotate(rotation);
             tmpModelMatrix.scale(0.2f, 0.2f, distance);
             tmpModelMatrix.translate(0, 0, -0.5f);
-
+            worldCamera.position.sub(tmpRenderPos);
+            worldCamera.update();
 
             if(ropeModel == null){
                 ropeModel = GameSingletons.itemEntityModelLoader.load(new ItemStack(Block.getInstance("metal_panel").getDefaultBlockState().getItem()));
             }
-            this.ropeModel.render(this, camera, tmpModelMatrix);
+            this.ropeModel.render(this, worldCamera, tmpModelMatrix, true);
+            worldCamera.position.set(cx, cy, cz);
+            worldCamera.update();
         }
     }
 

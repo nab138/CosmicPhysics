@@ -35,6 +35,7 @@ dependencies {
     cosmicReach("finalforeach:cosmicreach:${cosmic_reach_version}")
 
     mod files('libs/CosmicReach-Seamless-Portals-2.1.0-merged-bundle.jar')
+    implementation("com.github.PuzzlesHQ:CosmicAPI:${cosmic_api_version}")
 }
 
 processResources {

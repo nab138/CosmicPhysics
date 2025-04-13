@@ -1,8 +1,6 @@
 package me.nabdev.physicsmod.items;
 
 import com.github.puzzle.core.loader.meta.EnvType;
-import com.github.puzzle.game.items.IModItem;
-import com.github.puzzle.game.items.data.DataTagManifest;
 import com.jme3.bullet.RotationOrder;
 import com.jme3.bullet.joints.New6Dof;
 import com.jme3.bullet.objects.PhysicsRigidBody;
@@ -10,6 +8,7 @@ import com.jme3.math.Matrix3f;
 import com.jme3.math.Vector3f;
 import finalforeach.cosmicreach.networking.server.ServerSingletons;
 import finalforeach.cosmicreach.util.Identifier;
+import io.github.puzzle.cosmic.item.AbstractCosmicItem;
 import me.nabdev.physicsmod.Constants;
 import me.nabdev.physicsmod.utils.IPhysicsEntity;
 import me.nabdev.physicsmod.utils.PhysicsWorld;
@@ -18,11 +17,10 @@ import java.util.ArrayList;
 import java.util.ConcurrentModificationException;
 import java.util.HashMap;
 
-public class Linker implements IModItem {
+public class Linker extends AbstractCosmicItem {
     public record LinkData(IPhysicsEntity other, New6Dof joint) {
     }
 
-    final DataTagManifest tagManifest = new DataTagManifest();
     public static final Identifier id = Identifier.of(Constants.MOD_ID, "linker");
     public static IPhysicsEntity entityOne = null;
     public static IPhysicsEntity entityTwo = null;
@@ -33,7 +31,8 @@ public class Linker implements IModItem {
 
 
     public Linker() {
-        addTexture(IModItem.MODEL_2_5D_ITEM, Identifier.of(Constants.MOD_ID, "linker.png"));
+        super(id);
+        addTexture(ItemModelType.ITEM_MODEL_2D, Identifier.of(Constants.MOD_ID, "linker.png"));
     }
 
     public static void link(IPhysicsEntity eOne, IPhysicsEntity eTwo) {
@@ -69,16 +68,6 @@ public class Linker implements IModItem {
         return id.toString();
     }
 
-    @Override
-    public Identifier getIdentifier() {
-        return id;
-    }
-
-    @Override
-    public DataTagManifest getTagManifest() {
-        return tagManifest;
-    }
-
     public static void addLinkTo(IPhysicsEntity entity, LinkData linkData) {
         if (links.containsKey(entity)) {
             links.get(entity).add(linkData);
@@ -101,7 +90,7 @@ public class Linker implements IModItem {
                 links.remove(entity);
             }
         } catch (ConcurrentModificationException e) {
-            Constants.LOGGER.error("Concurrent modification exception while clearing links for entity: " + entity);
+            Constants.LOGGER.error("Concurrent modification exception while clearing links for entity: {}", entity);
         }
     }
 

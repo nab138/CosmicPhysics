@@ -16,6 +16,9 @@
     ],
     "portalEntityRender": [
       "me.nabdev.physicsmod.PortalInitializer"
+    ],
+    "client_postInit": [
+      "me.nabdev.physicsmod.PhysicsClientPostInitializer"
     ]
   },
   "mixins": [
@@ -26,8 +29,9 @@
     }
   ],
   "dependencies": {
-    "cosmic-reach": ">=0.3.14",
-    "puzzle-loader": ">=2.2.3"
+    "cosmic-reach": ">=0.4.6",
+    "puzzle-loader": ">=3.0.2",
+    "cosmic-api": ">=1.2.6"
   },
   "accessTransformers": ["physics_mod.manipulator"],
   "meta": {

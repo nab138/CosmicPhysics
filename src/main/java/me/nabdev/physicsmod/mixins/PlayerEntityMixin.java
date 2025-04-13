@@ -69,7 +69,7 @@ public class PlayerEntityMixin extends Entity {
 
                                     this.collidedY = true;
 
-                                    this.onCollideWithBlock(Axis.Y, blockAdj, bx, by, bz);
+                                    this.onCollideWithBlock(Axis.Y, blockAdj, targetPosition, bx, by, bz);
                                 }
                             }
                         }
@@ -109,7 +109,7 @@ public class PlayerEntityMixin extends Entity {
 
         if (isOnGround) {
             this.floorFriction = floorFriction;
-        } else if (!this.isInFluid() && !this.noClip) {
+        } else if (!this.isInFluid() && !this.isNoClip()) {
             this.floorFriction = 0.1F;
         } else {
             this.floorFriction = 1.0F;
@@ -198,7 +198,7 @@ public class PlayerEntityMixin extends Entity {
                                                 targetPosition.x = bb.max.x + this.tmpEntityBoundingBox.getWidth() / 2.0F + 0.01F;
                                             }
 
-                                            this.onCollideWithBlock(Axis.X, blockAdj, bx, by, bz);
+                                            this.onCollideWithBlock(Axis.X, blockAdj, targetPosition, bx, by, bz);
                                             this.collidedX = true;
                                             this.onceVelocity.x = 0.0F;
                                             this.velocity.x = 0.0F;
@@ -293,7 +293,7 @@ public class PlayerEntityMixin extends Entity {
                                                 targetPosition.z = bb.max.z + this.tmpEntityBoundingBox.getDepth() / 2.0F + 0.01F;
                                             }
 
-                                            this.onCollideWithBlock(Axis.Z, blockAdj, bx, by, bz);
+                                            this.onCollideWithBlock(Axis.Z, blockAdj, targetPosition, bx, by, bz);
                                             this.collidedZ = true;
                                             this.onceVelocity.z = 0.0F;
                                             this.velocity.z = 0.0F;

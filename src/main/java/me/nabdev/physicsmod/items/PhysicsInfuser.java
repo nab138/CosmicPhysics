@@ -1,28 +1,29 @@
 package me.nabdev.physicsmod.items;
 
 import com.badlogic.gdx.math.Vector3;
-import com.github.puzzle.game.items.IModItem;
-import com.github.puzzle.game.items.data.DataTagManifest;
 import com.github.puzzle.game.util.BlockUtil;
 import finalforeach.cosmicreach.GameSingletons;
 import finalforeach.cosmicreach.blocks.Block;
-import finalforeach.cosmicreach.blocks.BlockPosition;
-import finalforeach.cosmicreach.blocks.BlockState;
-import finalforeach.cosmicreach.entities.player.Player;
-import finalforeach.cosmicreach.items.ItemSlot;
 import finalforeach.cosmicreach.util.Identifier;
-import finalforeach.cosmicreach.world.Zone;
+import io.github.puzzle.cosmic.api.block.IBlock;
+import io.github.puzzle.cosmic.api.block.IBlockPosition;
+import io.github.puzzle.cosmic.api.block.PBlockState;
+import io.github.puzzle.cosmic.api.entity.player.IPlayer;
+import io.github.puzzle.cosmic.api.item.IItemSlot;
+import io.github.puzzle.cosmic.api.world.IZone;
+import io.github.puzzle.cosmic.item.AbstractCosmicItem;
+import io.github.puzzle.cosmic.util.APISide;
 import me.nabdev.physicsmod.Constants;
 import me.nabdev.physicsmod.utils.PhysicsUtils;
 
-public class PhysicsInfuser implements IModItem {
-    final DataTagManifest tagManifest = new DataTagManifest();
+public class PhysicsInfuser extends AbstractCosmicItem {
     public static final Identifier id = Identifier.of(Constants.MOD_ID, "infuser");
 
     public static boolean ignoreNextUse = false;
 
     public PhysicsInfuser() {
-        addTexture(IModItem.MODEL_2_5D_ITEM, Identifier.of(Constants.MOD_ID, "infuser.png"));
+        super(id);
+        addTexture(ItemModelType.ITEM_MODEL_2D, Identifier.of(Constants.MOD_ID, "infuser.png"));
     }
 
     @Override
@@ -31,40 +32,33 @@ public class PhysicsInfuser implements IModItem {
     }
 
     @Override
-    public Identifier getIdentifier() {
-        return id;
-    }
-
-    @Override
-    public DataTagManifest getTagManifest() {
-        return tagManifest;
-    }
-
-    @Override
-    public void use(ItemSlot slot, Player player, BlockPosition targetPlaceBlockPos, BlockPosition pos) {
+    public boolean pUse(APISide side, IItemSlot itemSlot, IPlayer player, IBlockPosition targetPlaceBlockPos, IBlockPosition pos, boolean isLeftClick) {
+        if(side == APISide.REMOTE_CLIENT || isLeftClick) {
+            return false;
+        }
         if (ignoreNextUse) {
             ignoreNextUse = false;
-            return;
+            return true;
         }
         if (pos == null) {
-            return;
+            return true;
         }
-        BlockState block = pos.getBlockState();
-        if (block == null || block.getBlock() == null || block.getBlock() == Block.AIR) {
-            return;
+        PBlockState block = pos.pGetBlockState();
+        if (block == null || block.pGetBlock() == null || block.pGetBlock() == IBlock.as(Block.AIR)) {
+            return true;
         }
 
 
-        Zone z = player.getZone();
+        IZone z = player.pGetZone();
         if(z == null) {
-            return;
+            return true;
         }
-
 
         if(GameSingletons.isHost) {
-            BlockUtil.setBlockAt(z, Block.AIR.getDefaultBlockState(), pos);
-            PhysicsUtils.createBlockAt(new Vector3(pos.getGlobalX(), pos.getGlobalY(), pos.getGlobalZ()).add(0.5f), block, z);
+            BlockUtil.setBlockAt(z.as(), Block.AIR.getDefaultBlockState(), pos.as());
+            PhysicsUtils.createBlockAt(new Vector3(pos.pGetGlobalX(), pos.pGetGlobalY(), pos.pGetGlobalZ()).add(0.5f), block.as(), z.as());
         }
+        return true;
     }
 
     @Override

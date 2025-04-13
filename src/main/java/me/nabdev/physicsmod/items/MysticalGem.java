@@ -1,31 +1,20 @@
 package me.nabdev.physicsmod.items;
 
-import com.github.puzzle.game.items.IModItem;
-import com.github.puzzle.game.items.data.DataTagManifest;
 import finalforeach.cosmicreach.util.Identifier;
+import io.github.puzzle.cosmic.item.AbstractCosmicItem;
 import me.nabdev.physicsmod.Constants;
 
-public class MysticalGem implements IModItem {
-    final DataTagManifest tagManifest = new DataTagManifest();
+public class MysticalGem extends AbstractCosmicItem {
     public static final Identifier id = Identifier.of(Constants.MOD_ID, "mystical_gem");
 
     public MysticalGem() {
-        addTexture(IModItem.MODEL_2_5D_ITEM, Identifier.of(Constants.MOD_ID, "mystical_gem.png"));
+        super(id);
+        addTexture(ItemModelType.ITEM_MODEL_2D, Identifier.of(Constants.MOD_ID, "mystical_gem.png"));
     }
 
     @Override
     public String toString() {
         return id.toString();
-    }
-
-    @Override
-    public Identifier getIdentifier() {
-        return id;
-    }
-
-    @Override
-    public DataTagManifest getTagManifest() {
-        return tagManifest;
     }
 
     @Override

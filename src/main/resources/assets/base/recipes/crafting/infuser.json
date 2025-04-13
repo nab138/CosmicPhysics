@@ -1,0 +1,16 @@
+{
+  "inputs": [
+    {
+      "item": "base:ingot_aluminium",
+      "amount": 4
+    },
+    {
+      "item": "base:ingot_gold",
+      "amount": 1
+    }
+  ],
+  "output": {
+    "item": "physics:infuser",
+    "amount": 1
+  }
+}
